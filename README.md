@@ -10,7 +10,7 @@ The contracts are written in `solidity` and built with the Ethereum framework `t
 
 # Rocket Pool Crowdsale
 
-This repo is for the Rocket Pool crowdsale. The current main Rocket Pool repo is [located here](/darcius/rocketpool).
+This repo is for the Rocket Pool crowdsale. The current main Rocket Pool repo is [located here](https://github.com/darcius/rocketpool).
 
 # Rocket Pool White Paper
 
