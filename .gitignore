@@ -1,0 +1,7 @@
+bin
+build
+app/config
+node/test
+node/services/*.js
+node_modules
+.vscode
