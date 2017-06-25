@@ -1,6 +1,6 @@
 pragma solidity ^0.4.10;
 import "./base/StandardToken.sol";
-import "./base/SafeMath.sol";
+import "./lib/Arithmetic.sol";
 
 /// @title The main Rocket Pool Token (RPL) crowdsale contract
 /// @author David Rugendyke
@@ -9,16 +9,17 @@ import "./base/SafeMath.sol";
  // credit for original idea and base contract goes to hiddentao - https://github.com/hiddentao/ethereum-token-sales
 
 
-contract RocketPoolToken is StandardToken, SafeMath {
+contract RocketPoolToken is StandardToken {
 
 
     /**** Properties ***********/
 
-    string public name = 'RocketPoolToken';
+    string public name = 'Rocket Pool Token';
     string public symbol = 'RPL';
     uint256 public constant decimals = 18;
     string public version = "1.0";
-    uint256 public totalSupply = 50**6;    // 50 Million
+    uint256 public totalSupply = 50**6;     // 50 Million
+    uint256 private calcBase = 1**decimals; // Use this as our base unit to remove the decimal place by multiplying and dividing by it since solidity doesn't support reals yet
 
     // Important Addresses
     address public depositAddress;        // Deposit address for ETH for ICO owner
@@ -83,7 +84,7 @@ contract RocketPoolToken is StandardToken, SafeMath {
         Contribute(msg.sender, msg.value); 
     }
 
-    /// Finalizes the funding and sends the ETH to deposit address
+    /// @dev Finalizes the funding and sends the ETH to deposit address
     function finaliseFunding() external {
         // Finalise the crowdsale funds
         assert(isFinalized) ;                       
@@ -101,7 +102,7 @@ contract RocketPoolToken is StandardToken, SafeMath {
         FinalizeSale(msg.sender);
     }
 
-    /// Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
+    /// @dev Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
     function claimTokensAndRefund() external {
         // Must have previously contributed
         assert(contributions[msg.sender] > 0); 
@@ -114,10 +115,12 @@ contract RocketPoolToken is StandardToken, SafeMath {
             // Fire event
             RefundContribution(msg.sender, contributions[msg.sender]);
         } else {
+            // Calculate what percent of the ether raised came from me
+            uint256 percEtherContributed = Arithmetic.overflowResistantFraction(contributions[msg.sender], calcBase, contributedTotal);
             // Calculate how many tokens I get
-            balances[msg.sender] = safeMult(totalSupply, contributions[msg.sender]) / contributedTotal;
+            balances[msg.sender] = Arithmetic.overflowResistantFraction(percEtherContributed, totalSupply, calcBase);
             // Refund excess ETH
-            if (!msg.sender.send(contributions[msg.sender] - (safeMult(targetEth, contributions[msg.sender]) / contributedTotal))) throw;
+            // if (!msg.sender.send(contributions[msg.sender] - (safeMult(targetEth, contributions[msg.sender]) / contributedTotal))) throw;
             // Fire event
             ClaimTokens(msg.sender, balances[msg.sender]);
       }
