@@ -32,8 +32,8 @@ contract RocketPoolToken is StandardToken, SafeMath {
     uint256 public txGasLimit;            // The max allowed gas for a contribution
 
     // Calculated values
-    mapping (address => uint256) contributions;     // ETH contributed per address
-    uint256 contributed;                            // Total ETH contributed
+    mapping (address => uint256) contributions;          // ETH contributed per address
+    uint256 contributedTotal;                            // Total ETH contributed
 
 
     /*** Events ****************/
@@ -78,7 +78,7 @@ contract RocketPoolToken is StandardToken, SafeMath {
         assert(tx.gasprice <= txGasLimit);                       
         // Add to contributions
         contributions[msg.sender] += msg.value;
-        contributed += msg.value;
+        contributedTotal += msg.value;
         // Fire event
         Contribute(msg.sender, msg.value); 
     }
@@ -92,7 +92,7 @@ contract RocketPoolToken is StandardToken, SafeMath {
         // Not yet finished?
         assert(block.number > fundingEndBlock);         
         // Not enough raised?
-        assert(contributed >= targetEth);                 
+        assert(contributedTotal >= targetEth);                 
         // We're done now
         isFinalized = true;
         // Send to deposit address - revert all state changes if it doesn't make it
@@ -103,22 +103,25 @@ contract RocketPoolToken is StandardToken, SafeMath {
 
     /// Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
     function claimTokensAndRefund() external {
-        if (0 == contributions[msg.sender]) throw;    // must have previously contributed
-        if (block.number < fundingEndBlock) throw;    // not yet done?
-
-        // if not enough funding
-        if (contributed < targetEth) {
-            // refund my full contribution
+        // Must have previously contributed
+        assert(contributions[msg.sender] > 0); 
+        // Crowdfund completed
+        assert(block.number > fundingEndBlock);    
+        // If not enough funding
+        if (contributedTotal < targetEth) {
+            // Refund my full contribution
             if (!msg.sender.send(contributions[msg.sender])) throw;
+            // Fire event
             RefundContribution(msg.sender, contributions[msg.sender]);
         } else {
-            // calculate how many tokens I get
-            balances[msg.sender] = safeMult(totalSupply, contributions[msg.sender]) / contributed;
-            // refund excess ETH
-            if (!msg.sender.send(contributions[msg.sender] - (safeMult(targetEth, contributions[msg.sender]) / contributed))) throw;
+            // Calculate how many tokens I get
+            balances[msg.sender] = safeMult(totalSupply, contributions[msg.sender]) / contributedTotal;
+            // Refund excess ETH
+            if (!msg.sender.send(contributions[msg.sender] - (safeMult(targetEth, contributions[msg.sender]) / contributedTotal))) throw;
+            // Fire event
             ClaimTokens(msg.sender, balances[msg.sender]);
       }
-
+      // All done
       contributions[msg.sender] = 0;
     }
 }
