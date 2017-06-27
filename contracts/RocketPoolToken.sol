@@ -45,20 +45,24 @@ contract RocketPoolToken is StandardToken {
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value);
 
+    /*** Tests *****************/
+    event FlagUint(uint256 flag);
+    event FlagAddress(address flag);
+
     
     /**** Methods ***********/
 
     // Constructor
     /// @dev RPL Token Init
-    /// @param _minEth The target ether amount required for the crowdsale
+    /// @param _targetEth The target ether amount required for the crowdsale
     /// @param _maxEthAllocation The max ether allowed per account
     /// @param _depositAddress The address that will receive the funds when the crowdsale is finalised
     /// @param _fundingStartBlock The start block for the crowdsale
     /// @param _fundingEndBlock The end block for the crowdsale
-    function RocketPoolToken(uint256 _minEth, uint256 _maxEthAllocation, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock, uint256 _txGasLimit) {
+    function RocketPoolToken(uint256 _targetEth, uint256 _maxEthAllocation, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock, uint256 _txGasLimit) {
         // Initialise params
         isFinalized = false;
-        targetEth = _minEth;                        
+        targetEth = _targetEth;                        
         maxEthAllocation = _maxEthAllocation;   
         depositAddress = _depositAddress;
         fundingStartBlock = _fundingStartBlock;
@@ -70,6 +74,7 @@ contract RocketPoolToken is StandardToken {
 
     /// @dev Accepts ETH from a contributor
     function() payable external {
+        
         // Did they send anything?
         assert(msg.value > 0);  
         // Check if we're ok to receive contributions, have we started?
@@ -85,6 +90,7 @@ contract RocketPoolToken is StandardToken {
         contributedTotal += msg.value;
         // Fire event
         Contribute(msg.sender, msg.value); 
+
     }
 
     /// @dev Finalizes the funding and sends the ETH to deposit address
@@ -123,7 +129,7 @@ contract RocketPoolToken is StandardToken {
             // Calculate how many tokens I get
             balances[msg.sender] = Arithmetic.overflowResistantFraction(percEtherContributed, totalSupply, calcBase);
             // Calculate the refund this user will receive
-            if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), calcBase)))) throw;
+            if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), calcBase))) throw;
             // Fire event
             ClaimTokens(msg.sender, balances[msg.sender]);
       }
