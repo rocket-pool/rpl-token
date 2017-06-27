@@ -18,8 +18,8 @@ contract RocketPoolToken is StandardToken {
     string public symbol = 'RPL';
     uint256 public constant decimals = 18;
     string public version = "1.0";
-    uint256 public totalSupply = 50**6;     // 50 Million
-    uint256 private calcBase = 1**decimals; // Use this as our base unit to remove the decimal place by multiplying and dividing by it since solidity doesn't support reals yet
+    uint256 public totalSupply = 50**6;         // 50 Million
+    uint256 private calcBase = 1**decimals;     // Use this as our base unit to remove the decimal place by multiplying and dividing by it since solidity doesn't support reals yet
 
     // Important Addresses
     address public depositAddress;        // Deposit address for ETH for ICO owner
@@ -27,7 +27,7 @@ contract RocketPoolToken is StandardToken {
     // Crowdsale Params
     bool public isFinalized;              // True when ICO finalized and successful
     uint256 public targetEth;             // Target ETH to raise
-    uint256 public maxEthPerTx;           // Max ETH allowed per contribution
+    uint256 public maxEthAllocation;      // Max ETH allowed per account
     uint256 public fundingStartBlock;     // When to start allowing funding
     uint256 public fundingEndBlock;       // When to stop allowing funding
     uint256 public txGasLimit;            // The max allowed gas for a contribution
@@ -39,9 +39,9 @@ contract RocketPoolToken is StandardToken {
 
     /*** Events ****************/
 
-    event CreateFairToken(string _name);
+    event CreateRPLToken(string _name);
     event Contribute(address _sender, uint256 _value);
-    event FinalizeSale(address _sender);
+    event FinaliseSale(address _sender);
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value);
 
@@ -51,32 +51,35 @@ contract RocketPoolToken is StandardToken {
     // Constructor
     /// @dev RPL Token Init
     /// @param _minEth The target ether amount required for the crowdsale
+    /// @param _maxEthAllocation The max ether allowed per account
     /// @param _depositAddress The address that will receive the funds when the crowdsale is finalised
     /// @param _fundingStartBlock The start block for the crowdsale
     /// @param _fundingEndBlock The end block for the crowdsale
-    function RocketPoolToken(uint256 _minEth, uint256 _maxEthPerTx, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock, uint256 _txGasLimit) {
+    function RocketPoolToken(uint256 _minEth, uint256 _maxEthAllocation, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock, uint256 _txGasLimit) {
         // Initialise params
         isFinalized = false;
-        targetEth = _minEth;
-        maxEthPerTx = _maxEthPerTx;
+        targetEth = _minEth;                        
+        maxEthAllocation = _maxEthAllocation;   
         depositAddress = _depositAddress;
         fundingStartBlock = _fundingStartBlock;
         fundingEndBlock = _fundingEndBlock;
         txGasLimit = _txGasLimit;
         // Fire event
-        CreateFairToken(name);
+        CreateRPLToken(name);
     }
 
     /// @dev Accepts ETH from a contributor
     function() payable external {
+        // Did they send anything?
+        assert(msg.value > 0);  
         // Check if we're ok to receive contributions, have we started?
         assert(block.number > fundingStartBlock);       
         // Already ended?
         assert(block.number < fundingEndBlock);       
-        // There is actual eth attached to msg and its within the limit per tx
-        assert(msg.value > 0 && msg.value <= maxEthPerTx);   
         // It's within the tx gas range
-        assert(tx.gasprice <= txGasLimit);                       
+        assert(tx.gasprice <= txGasLimit);    
+        // Max sure the user has not exceeded their ether allocation
+        assert((contributions[msg.sender] + msg.value) <= maxEthAllocation);              
         // Add to contributions
         contributions[msg.sender] += msg.value;
         contributedTotal += msg.value;
@@ -87,7 +90,7 @@ contract RocketPoolToken is StandardToken {
     /// @dev Finalizes the funding and sends the ETH to deposit address
     function finaliseFunding() external {
         // Finalise the crowdsale funds
-        assert(isFinalized) ;                       
+        assert(isFinalized);                       
         // Wrong sender?
         assert(msg.sender == depositAddress);            
         // Not yet finished?
@@ -99,7 +102,7 @@ contract RocketPoolToken is StandardToken {
         // Send to deposit address - revert all state changes if it doesn't make it
         if (!depositAddress.send(targetEth)) throw;
         // Fire event
-        FinalizeSale(msg.sender);
+        FinaliseSale(msg.sender);
     }
 
     /// @dev Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
@@ -119,8 +122,8 @@ contract RocketPoolToken is StandardToken {
             uint256 percEtherContributed = Arithmetic.overflowResistantFraction(contributions[msg.sender], calcBase, contributedTotal);
             // Calculate how many tokens I get
             balances[msg.sender] = Arithmetic.overflowResistantFraction(percEtherContributed, totalSupply, calcBase);
-            // Refund excess ETH
-            // if (!msg.sender.send(contributions[msg.sender] - (safeMult(targetEth, contributions[msg.sender]) / contributedTotal))) throw;
+            // Calculate the refund this user will receive
+            if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), calcBase)))) throw;
             // Fire event
             ClaimTokens(msg.sender, balances[msg.sender]);
       }
