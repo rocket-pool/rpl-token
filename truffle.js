@@ -13,7 +13,7 @@ module.exports = {
         // The crowdsale parameters  
         crowdsale: {
             // What the crowdsale is aiming for - 5 Ether
-            targetEth: units.convert('1', 'ether', 'wei'),
+            targetEth: units.convert('5', 'ether', 'wei'),
             // Max ether allowed per account 2 Ether
             maxEthAllocation: units.convert('2', 'ether', 'wei'),
             // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
@@ -21,9 +21,7 @@ module.exports = {
             // Start block
             fundingStartBlock: 5,
             // End block
-            fundingEndBlock: 25,
-            // Max allowed gas per contribution
-            txGasLimit: 500000
+            fundingEndBlock: 15
         }  
       
       },

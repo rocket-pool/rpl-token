@@ -18,7 +18,6 @@ module.exports = function(deployer) {
       crowdsale.maxEthAllocation,
       crowdsale.depositAddress,
       crowdsale.fundingStartBlock,
-      crowdsale.fundingEndBlock,
-      crowdsale.txGasLimit
+      crowdsale.fundingEndBlock
   );
 };

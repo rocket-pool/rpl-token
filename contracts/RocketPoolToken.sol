@@ -25,13 +25,12 @@ contract RocketPoolToken is StandardToken {
     address public depositAddress;        // Deposit address for ETH for ICO owner
 
     // Crowdsale Params
-    bool public isFinalized;              // True when ICO finalized and successful
+    bool public isFinalised;              // True when ICO finalized and successful
     uint256 public targetEth;             // Target ETH to raise
     uint256 public maxEthAllocation;      // Max ETH allowed per account
     uint256 public fundingStartBlock;     // When to start allowing funding
     uint256 public fundingEndBlock;       // When to stop allowing funding
-    uint256 public txGasLimit;            // The max allowed gas for a contribution
-
+ 
     // Calculated values
     mapping (address => uint256) contributions;          // ETH contributed per address
     uint256 contributedTotal;                            // Total ETH contributed
@@ -59,40 +58,38 @@ contract RocketPoolToken is StandardToken {
     /// @param _depositAddress The address that will receive the funds when the crowdsale is finalised
     /// @param _fundingStartBlock The start block for the crowdsale
     /// @param _fundingEndBlock The end block for the crowdsale
-    function RocketPoolToken(uint256 _targetEth, uint256 _maxEthAllocation, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock, uint256 _txGasLimit) {
+    function RocketPoolToken(uint256 _targetEth, uint256 _maxEthAllocation, address _depositAddress, uint256 _fundingStartBlock, uint256 _fundingEndBlock) {
         // Initialise params
-        isFinalized = false;
+        isFinalised = false;
         targetEth = _targetEth;                        
         maxEthAllocation = _maxEthAllocation;   
         depositAddress = _depositAddress;
         fundingStartBlock = _fundingStartBlock;
         fundingEndBlock = _fundingEndBlock;
-        txGasLimit = _txGasLimit;
         // Fire event
         CreateRPLToken(name);
     }
 
     /// @dev Accepts ETH from a contributor
     function() payable external {
+        
         /*
         FlagUint(targetEth);
         FlagUint(maxEthAllocation);
         FlagAddress(depositAddress);
         FlagUint(fundingStartBlock);
         FlagUint(fundingEndBlock);
-        FlagUint(txGasLimit);
         FlagUint(1);
         FlagUint(block.number);
-        FlagUint(msg.gas);
+        FlagUint(msg.value);
         */
+
         // Did they send anything?
         assert(msg.value > 0);  
         // Check if we're ok to receive contributions, have we started?
         assert(block.number > fundingStartBlock);       
         // Already ended?
-        assert(block.number < fundingEndBlock);       
-        // It's within the tx gas range
-        assert(msg.gas <= txGasLimit);    
+        assert(block.number < fundingEndBlock);        
         // Max sure the user has not exceeded their ether allocation
         assert((contributions[msg.sender] + msg.value) <= maxEthAllocation);              
         // Add to contributions
@@ -102,10 +99,16 @@ contract RocketPoolToken is StandardToken {
         Contribute(msg.sender, msg.value); 
     }
 
+    /// @dev Get the contribution total of ETH from a contributor
+    /// @param _owner The owners address
+    function contributionOf(address _owner) constant returns (uint256 balance) {
+        return contributions[_owner];
+    }
+
     /// @dev Finalizes the funding and sends the ETH to deposit address
     function finaliseFunding() external {
         // Finalise the crowdsale funds
-        assert(isFinalized);                       
+        assert(!isFinalised);                       
         // Wrong sender?
         assert(msg.sender == depositAddress);            
         // Not yet finished?
@@ -113,7 +116,7 @@ contract RocketPoolToken is StandardToken {
         // Not enough raised?
         assert(contributedTotal >= targetEth);                 
         // We're done now
-        isFinalized = true;
+        isFinalised = true;
         // Send to deposit address - revert all state changes if it doesn't make it
         if (!depositAddress.send(targetEth)) throw;
         // Fire event
