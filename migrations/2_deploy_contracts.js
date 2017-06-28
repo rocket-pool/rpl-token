@@ -6,8 +6,8 @@ var arithmeticLib = artifacts.require("./lib/Arithmetic.sol");
 var options = !artifacts.resolver.options ? artifacts.resolver.resolver.options : artifacts.resolver.options;
 var crowdsale = options.network_config.crowdsale;
 var network = options.network;
-
-//console.log(artifacts.resolver.options.network);
+// If we are on local, the depositAddress is the coinbase
+crowdsale.depositAddress = network == 'development' ? web3.eth.coinbase : crowdsale.depositAddress;
 
 // Deploy now
 module.exports = function(deployer) {

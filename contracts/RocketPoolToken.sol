@@ -74,7 +74,17 @@ contract RocketPoolToken is StandardToken {
 
     /// @dev Accepts ETH from a contributor
     function() payable external {
-        
+        /*
+        FlagUint(targetEth);
+        FlagUint(maxEthAllocation);
+        FlagAddress(depositAddress);
+        FlagUint(fundingStartBlock);
+        FlagUint(fundingEndBlock);
+        FlagUint(txGasLimit);
+        FlagUint(1);
+        FlagUint(block.number);
+        FlagUint(msg.gas);
+        */
         // Did they send anything?
         assert(msg.value > 0);  
         // Check if we're ok to receive contributions, have we started?
@@ -82,7 +92,7 @@ contract RocketPoolToken is StandardToken {
         // Already ended?
         assert(block.number < fundingEndBlock);       
         // It's within the tx gas range
-        assert(tx.gasprice <= txGasLimit);    
+        assert(msg.gas <= txGasLimit);    
         // Max sure the user has not exceeded their ether allocation
         assert((contributions[msg.sender] + msg.value) <= maxEthAllocation);              
         // Add to contributions
@@ -90,7 +100,6 @@ contract RocketPoolToken is StandardToken {
         contributedTotal += msg.value;
         // Fire event
         Contribute(msg.sender, msg.value); 
-
     }
 
     /// @dev Finalizes the funding and sends the ETH to deposit address

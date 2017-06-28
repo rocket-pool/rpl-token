@@ -61,7 +61,7 @@ contract('RocketPoolToken', function (accounts) {
             // Transaction
             return rocketPoolTokenInstance.sendTransaction({ from: userFirst, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
                 return result;
-            }).then(function(result) {
+            }).then(function(result) { 
                assert(false, "Expect throw but didn't.");
             }).catch(function (error) {
                 return checkThrow(error);
