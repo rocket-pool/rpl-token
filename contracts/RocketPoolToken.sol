@@ -16,10 +16,10 @@ contract RocketPoolToken is StandardToken {
 
     string public name = 'Rocket Pool Token';
     string public symbol = 'RPL';
-    uint256 public constant decimals = 18;
     string public version = "1.0";
-    uint256 public totalSupply = 50**6;         // 50 Million
-    uint256 private calcBase = 1**decimals;     // Use this as our base unit to remove the decimal place by multiplying and dividing by it since solidity doesn't support reals yet
+    uint256 public constant decimals = 18;
+    uint256 public constant exponent = 10**decimals;
+    uint256 public totalSupply = 50 * (10**6) * exponent;   // 50 Million
 
     // Important Addresses
     address public depositAddress;        // Deposit address for ETH for ICO owner
@@ -33,7 +33,7 @@ contract RocketPoolToken is StandardToken {
  
     // Calculated values
     mapping (address => uint256) contributions;          // ETH contributed per address
-    uint256 contributedTotal;                            // Total ETH contributed
+    uint256 public contributedTotal;                     // Total ETH contributed TODO: Make private before deploying
 
 
     /*** Events ****************/
@@ -73,7 +73,9 @@ contract RocketPoolToken is StandardToken {
     /// @dev Accepts ETH from a contributor
     function() payable external {
         
-        /*
+        FlagUint(totalSupply);
+        FlagUint(exponent);
+        FlagUint(1);
         FlagUint(targetEth);
         FlagUint(maxEthAllocation);
         FlagAddress(depositAddress);
@@ -82,7 +84,7 @@ contract RocketPoolToken is StandardToken {
         FlagUint(1);
         FlagUint(block.number);
         FlagUint(msg.value);
-        */
+        
 
         // Did they send anything?
         assert(msg.value > 0);  
@@ -105,7 +107,7 @@ contract RocketPoolToken is StandardToken {
         return contributions[_owner];
     }
 
-    /// @dev Finalizes the funding and sends the ETH to deposit address
+    /// @dev Finalises the funding and sends the ETH to deposit address
     function finaliseFunding() external {
         // Finalise the crowdsale funds
         assert(!isFinalised);                       
@@ -125,27 +127,33 @@ contract RocketPoolToken is StandardToken {
 
     /// @dev Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
     function claimTokensAndRefund() external {
+         FlagUint(totalSupply);
         // Must have previously contributed
         assert(contributions[msg.sender] > 0); 
         // Crowdfund completed
-        assert(block.number > fundingEndBlock);    
-        // If not enough funding
+        assert(block.number > fundingEndBlock);   
+        // The users contribution
+        uint256 userContributionTotal = contributions[msg.sender];
+        // Deduct the contribution now to protect against recursive calls
+        contributions[msg.sender] = 0; 
+        // Has the contributed total not been reached, but the crowdsale is over?
         if (contributedTotal < targetEth) {
-            // Refund my full contribution
-            if (!msg.sender.send(contributions[msg.sender])) throw;
+            // Target wasn't met, refund the user
+            if (!msg.sender.send(userContributionTotal)) throw;
             // Fire event
-            RefundContribution(msg.sender, contributions[msg.sender]);
+            RefundContribution(msg.sender, userContributionTotal);
         } else {
             // Calculate what percent of the ether raised came from me
-            uint256 percEtherContributed = Arithmetic.overflowResistantFraction(contributions[msg.sender], calcBase, contributedTotal);
+            uint256 percEtherContributed = Arithmetic.overflowResistantFraction(userContributionTotal, exponent, contributedTotal);
             // Calculate how many tokens I get
-            balances[msg.sender] = Arithmetic.overflowResistantFraction(percEtherContributed, totalSupply, calcBase);
+            balances[msg.sender] = Arithmetic.overflowResistantFraction(percEtherContributed, totalSupply, exponent);
+            FlagUint(percEtherContributed);
+            FlagUint(balances[msg.sender]);
+            FlagUint(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent));
             // Calculate the refund this user will receive
-            if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), calcBase))) throw;
+            if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent))) throw;
             // Fire event
             ClaimTokens(msg.sender, balances[msg.sender]);
-      }
-      // All done
-      contributions[msg.sender] = 0;
+        }
     }
 }

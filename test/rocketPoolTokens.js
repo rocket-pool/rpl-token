@@ -1,5 +1,7 @@
 var rocketPoolToken = artifacts.require("./contract/RocketPoolToken.sol");
 
+var totalSupply = 50000000; // 50mil
+var totalContributions = 0;
 var displayEvents = false;
 
 // Display events triggered during the tests
@@ -47,6 +49,7 @@ contract('RocketPoolToken', function (accounts) {
     var userSecond = accounts[2];
     var userThird = accounts[3];
     var userFourth = accounts[4];
+    var userFifth = accounts[5];
 
 
     // Print nice titles for each unit test
@@ -115,7 +118,7 @@ contract('RocketPoolToken', function (accounts) {
             var sendAmount = web3.toWei('1', 'ether'); 
             // Transaction
             return rocketPoolTokenInstance.sendTransaction({ from: userFirst, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                // Get the contrubution balance of their account now
+                // Get the contribution balance of their account now
                 return rocketPoolTokenInstance.contributionOf.call(userFirst).then(function (result) {
                     return result.valueOf() == sendAmount ? true : false;
                 });
@@ -165,7 +168,7 @@ contract('RocketPoolToken', function (accounts) {
     it(printTitle('userFirst', 'makes another successful deposit to max out their account contribution'), function () {
         // Check RocketHub is deployed first    
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Get the contrubution balance of their account now
+            // Get the contribution balance of their account now
             return rocketPoolTokenInstance.contributionOf.call(userFirst).then(function (result) {
                 // His contrbutions so far
                 var userFirstContributionTotal = parseInt(result.valueOf());
@@ -176,7 +179,7 @@ contract('RocketPoolToken', function (accounts) {
                     var sendAmount = maxEthAllocation - userFirstContributionTotal; 
                     // Transaction
                     return rocketPoolTokenInstance.sendTransaction({ from: userFirst, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                        // Get the contrubution balance of their account now
+                        // Get the contribution balance of their account now
                         return rocketPoolTokenInstance.contributionOf.call(userFirst).then(function (result) {
                             return result.valueOf() == maxEthAllocation ? true : false;
                         }).then(function (result) {
@@ -215,7 +218,7 @@ contract('RocketPoolToken', function (accounts) {
                 var sendAmount = parseInt(result.valueOf());
                 // Transaction
                 return rocketPoolTokenInstance.sendTransaction({ from: userSecond, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                    // Get the contrubution balance of their account now
+                    // Get the contribution balance of their account now
                     return rocketPoolTokenInstance.contributionOf.call(userSecond).then(function (result) {
                         return result.valueOf() == sendAmount ? true : false;
                     }).then(function (result) {
@@ -234,7 +237,7 @@ contract('RocketPoolToken', function (accounts) {
             var sendAmount = web3.toWei('1.33333945012327895', 'ether');
             // Transaction
             return rocketPoolTokenInstance.sendTransaction({ from: userThird, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                // Get the contrubution balance of their account now
+                // Get the contribution balance of their account now
                 return rocketPoolTokenInstance.contributionOf.call(userThird).then(function (result) {
                     return result.valueOf() == sendAmount ? true : false;
                 }).then(function (result) {
@@ -245,6 +248,25 @@ contract('RocketPoolToken', function (accounts) {
     }); // End Test 
 
 
+    it(printTitle('userThird', 'attempts early withdrawl of tokens'), function () {
+        // Check RocketHub is deployed first    
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Transaction
+            return rocketPoolTokenInstance.claimTokensAndRefund({ from: userThird, to: rocketPoolTokenInstance.address, gas: 250000 }).then(function(result) {
+                   return result;
+            }).then(function(result) { 
+            assert(false, "Expect throw but didn't.");
+            }).catch(function (error) {
+                return checkThrow(error);
+            });
+        });    
+    }); // End Test     
+
+
+
+    // ******* Crowdsale hits block < 15, closes **************
+
+ 
     it(printTitle('userFourth', 'makes successful deposit to crowdsale of 0.5 ether'), function () {
         // Check RocketHub is deployed first    
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
@@ -252,7 +274,7 @@ contract('RocketPoolToken', function (accounts) {
             var sendAmount = web3.toWei('0.5', 'ether');
             // Transaction
             return rocketPoolTokenInstance.sendTransaction({ from: userFourth, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                // Get the contrubution balance of their account now
+                // Get the contribution balance of their account now
                 return rocketPoolTokenInstance.contributionOf.call(userFourth).then(function (result) {
                     return result.valueOf() == sendAmount ? true : false;
                 }).then(function (result) {
@@ -260,29 +282,10 @@ contract('RocketPoolToken', function (accounts) {
                 });
             });
         });    
-    }); // End Test 
-
-    // ******* Crowdsale hits block < 14, closes **************
-
-    it(printTitle('userFourth', 'makes successful deposit to crowdsale of 0.5 ether'), function () {
-        // Check RocketHub is deployed first    
-        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Contribute amount
-            var sendAmount = web3.toWei('0.5', 'ether');
-            // Transaction
-            return rocketPoolTokenInstance.sendTransaction({ from: userFourth, to: rocketPoolTokenInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
-                // Get the contrubution balance of their account now
-                return rocketPoolTokenInstance.contributionOf.call(userFourth).then(function (result) {
-                    return result.valueOf() == sendAmount*2 ? true : false;
-                }).then(function (result) {
-                    assert.isTrue(result, "Contribution made successfully.");
-                });
-            });
-        });    
     }); // End Test   
+    
 
-    // ******* Crowdsale hits block 14, closes **************
-
+  
     it(printTitle('userFourth', 'fails to make deposit to crowdsale of 0.5 ether as crowdsale end block is hit'), function () {
         // Check RocketHub is deployed first    
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
@@ -299,8 +302,72 @@ contract('RocketPoolToken', function (accounts) {
         });    
     }); // End Test     
 
-    
 
+    it(printTitle('userFifth', 'attempts to make a withdrawal without having contributed anything'), function () {
+        // Check RocketHub is deployed first    
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Transaction
+            return rocketPoolTokenInstance.claimTokensAndRefund({ from: userFifth, to: rocketPoolTokenInstance.address, gas: 250000 }).then(function(result) {
+                   return result;
+            }).then(function(result) { 
+            assert(false, "Expect throw but didn't.");
+            }).catch(function (error) {
+                return checkThrow(error);
+            });
+        });    
+    }); // End Test  
+
+
+    it(printTitle('userFirst', 'gets the total amount of contributions'), function () {
+        // Check RocketHub is deployed first    
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Get the contribution balance of their account now
+            return rocketPoolTokenInstance.contributedTotal.call(userFirst).then(function (result) {
+                totalContributions = result.valueOf();
+            });
+        });
+    });
+
+
+    
+    it(printTitle('userFirst', 'withdraws his tokens and gets refund'), function () {
+        // Check RocketHub is deployed first    
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Get the users current ether balance
+            var userFirstBalance = web3.eth.getBalance(userFirst).valueOf();
+            // Get the contribution balance of their account now
+            return rocketPoolTokenInstance.contributionOf.call(userFirst).then(function (result) {
+                // Contribution
+                var firstUsercontributionTotal = parseFloat(result.valueOf());
+                // Transaction
+                return rocketPoolTokenInstance.claimTokensAndRefund({ from: userFirst, to: rocketPoolTokenInstance.address, gas: 250000 }).then(function(result) {
+                    // Get the contribution balance of their account now after withdrawing
+                    return rocketPoolTokenInstance.contributionOf.call(userFirst).then(function (result) {
+                        // Contributions total now
+                        var firstUsercontributionTotalAfter = parseFloat(result.valueOf());
+                        // Get the contribution balance of their account now after withdrawing
+                        return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                            // Token total now
+                            var tokenTotalAfter = parseFloat(result.valueOf());
+                            // Get the users current ether balance after withdrawing tokens, should have the refund
+                            var userFirstBalanceAfter = web3.eth.getBalance(userFirst).valueOf();
+                            //console.log(web3.fromWei(userFirstBalance, 'ether'), web3.fromWei(userFirstBalanceAfter, 'ether'));
+                            //console.log(web3.fromWei(firstUsercontributionTotal, 'ether'), web3.fromWei(firstUsercontributionTotalAfter, 'ether'));
+                            //console.log(web3.fromWei(tokenTotalAfter, 'ether'), tokenTotalAfter);
+                            // console.log(Math.round(web3.fromWei(tokenTotalAfter, 'ether')), Math.round(parseFloat(firstUsercontributionTotal / totalContributions) * totalSupply));
+                            // Should have received refund, have no contributions left and have tokens that match the calculated proportion
+                            return userFirstBalanceAfter > userFirstBalance && 
+                                   Math.round(web3.fromWei(tokenTotalAfter, 'ether')) == Math.round(parseFloat(firstUsercontributionTotal / totalContributions) * totalSupply) && 
+                                   firstUsercontributionTotalAfter == 0
+                                   ? true : false;
+                        }).then(function (result) {
+                            assert.isTrue(result, "Contribution made successfully.");
+                        });
+                    })
+                });
+            });
+        });    
+    }); // End Test   
    
 });
 
