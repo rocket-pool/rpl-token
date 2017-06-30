@@ -10,18 +10,21 @@ module.exports = {
         host: "localhost",
         port: 8545,
         network_id: "*", // Match any network id,
+        // The token parameters  
+        token: {
+            // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
+            depositAddress: 0,
+        },  
         // The crowdsale parameters  
         crowdsale: {
             // What the crowdsale is aiming for - 5 Ether
             targetEth: units.convert('5', 'ether', 'wei'),
             // Max ether allowed per account 2 Ether
             maxEthAllocation: units.convert('3', 'ether', 'wei'),
-            // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-            depositAddress: 0,
             // Start block
             fundingStartBlock: 5,
             // End block
-            fundingEndBlock: 15
+            fundingEndBlock: 16
         }  
       
       },

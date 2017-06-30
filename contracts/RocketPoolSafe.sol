@@ -18,9 +18,9 @@ contract RocketPoolSafe {
     // Set the main token address
     RocketPoolToken = _RocketPoolToken;
     // Set the unlock date for the token pre-sale
-    unlockDate = now + 6 * 30 days;
+    unlockDate = now + 1 * 30 days;
     // Set the address pre-allocations
-    // allocations[0xe0faEF3D61255d1Bd7ad66987D2fBB3AE5Ee8E33] = 16000000;
+    //allocations[0xe0faEF3D61255d1Bd7ad66987D2fBB3AE5Ee8E33] = 16000000;
   }
 
   function unlock() external {
