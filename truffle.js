@@ -24,7 +24,7 @@ module.exports = {
             // Start block
             fundingStartBlock: 5,
             // End block
-            fundingEndBlock: 16
+            fundingEndBlock: 17
         }  
       
       },

@@ -29,7 +29,7 @@ contract RocketPoolCrowdsale is RocketPoolToken {
     /*** Events ****************/
 
     event Contribute(address _sender, uint256 _value);
-    event FinaliseSale(address _sender);
+    event FinaliseSale(address _sender, uint256 _value);
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value); 
 
@@ -109,7 +109,7 @@ contract RocketPoolCrowdsale is RocketPoolToken {
         // Send to deposit address - revert all state changes if it doesn't make it
         if (!depositAddress.send(targetEth)) throw;
         // Fire event
-        FinaliseSale(msg.sender);
+        FinaliseSale(msg.sender, targetEth);
     }
 
     /// @dev Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether

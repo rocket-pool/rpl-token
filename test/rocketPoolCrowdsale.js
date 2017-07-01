@@ -1,10 +1,8 @@
+// Load contracts
 var rocketPoolCrowdsale = artifacts.require("./contract/RocketPoolCrowdsale.sol");
 
-var exponent = Math.pow(10, 18); // 18 Decimal places
-var totalSupply = 50 * Math.pow(10, 6) * exponent; // 50mil
-var totalContributions = 0;
+// Show events
 var displayEvents = false;
-
 
 // Display events triggered during the tests
 if(displayEvents) {
@@ -30,22 +28,35 @@ if(displayEvents) {
     });
 }
 
+// Print nice titles for each unit test
+var printTitle = function(user, desc) {
+    return '\x1b[33m'+user+'\033[00m\: \033[01;34m'+desc;
+}
 
-// Create a snapshot at genesis block, so each text after this starts from there
-/*
-web3.currentProvider.sendSync({
-    jsonrpc: "2.0",
-    method: "evm_snapshot",
-    id: 12345
-}, function(err, result) {
-    // this is your callback
-    console.log('SNAPSHOT');
-});
-*/
+// Checks to see if a throw was triggered
+var checkThrow = function (error) {
+    if(error.toString().indexOf("VM Exception") == -1) {
+        // Didn't throw like we expected
+        return assert(false, error.toString());
+    } 
+    // Always show out of gas errors
+    if(error.toString().indexOf("out of gas") != -1) {
+        return assert(false, error.toString());
+    }
+}
+
 
 // Start the token and crowdsale tests now
 contract('RocketPoolCrowdsale', function (accounts) {
 
+
+    // Set our crowdsale units
+    var exponent = 0;
+    var totalSupply = 0;
+    var totalContributions = 0;
+    var targetEth = 0;
+    // Set our crowdsale addresses
+    var depositAddress = 0;
     // Our contributers    
     var owner = accounts[0];
     var userFirst = accounts[1];
@@ -55,29 +66,34 @@ contract('RocketPoolCrowdsale', function (accounts) {
     var userFifth = accounts[5];
 
 
-    // Print nice titles for each unit test
-    var printTitle = function(user, desc) {
-        return '\x1b[33m'+user+'\033[00m\: \033[01;34m'+desc;
-    }
+    // Load our contract network settings
+    it(printTitle('contract', 'load crowdsale settings'), function () {
+        // Crowdsale contract   
+        return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
+            // Set the exponent
+            return rocketPoolCrowdsaleInstance.exponent.call().then(function(result) {
+                exponent = result.valueOf();
+                // Set the total supply
+                return rocketPoolCrowdsaleInstance.totalSupply.call().then(function(result) {
+                    totalSupply = result.valueOf();
+                    // Set the total supply
+                    return rocketPoolCrowdsaleInstance.depositAddress.call().then(function(result) {
+                        depositAddress = result.valueOf();
+                        // Set the target eth
+                        return rocketPoolCrowdsaleInstance.targetEth.call().then(function(result) {
+                            targetEth = result.valueOf();
+                            //console.log(exponent, totalSupply, targetEth, depositAddress);
+                        });
+                    });
+                });
+            });
+        });
+    });   
 
-    // Checks to see if a throw was triggered
-    var checkThrow = function (error) {
-        if(error.toString().indexOf("VM Exception") == -1) {
-            // Didn't throw like we expected
-            return assert(false, error.toString());
-        } 
-        // Always show out of gas errors
-        if(error.toString().indexOf("out of gas") != -1) {
-            return assert(false, error.toString());
-        }
-    }
-
-
-    
 
     // Begin Tests
     it(printTitle('userFirst', 'fails to deposit before the crowdsale begins'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = web3.toWei('1', 'ether'); 
@@ -94,7 +110,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
     // Block 5 should have been reached now for the start of the crowdfund
     it(printTitle('userFirst', 'fails to deposit by sending more than the maxEthAllocation will allow per account'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the max ether per account
             return rocketPoolCrowdsaleInstance.maxEthAllocation.call().then(function (result) {
@@ -115,7 +131,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
     
     it(printTitle('userFirst', 'makes successful deposit to crowdsale of 1 ether'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = web3.toWei('1', 'ether'); 
@@ -133,8 +149,8 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
 
-    it(printTitle('depositAddress', 'fails to call finaliseFunding successfully while crowdsale is running'), function () {
-        // Check RocketHub is deployed first    
+    it(printTitle('despositAddress', 'fails to call finaliseFunding successfully while crowdsale is running'), function () {
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the max ether per account
             return rocketPoolCrowdsaleInstance.finaliseFunding({ from: web3.eth.coinbase, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function (result) {
@@ -149,7 +165,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFirst', 'fails to deposit using by adding to their deposit that than exceeds the maxEthAllocation will allow per account'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the max ether per account
             return rocketPoolCrowdsaleInstance.maxEthAllocation.call().then(function (result) {
@@ -170,7 +186,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFirst', 'makes another successful deposit to max out their account contribution'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the contribution balance of their account now
             return rocketPoolCrowdsaleInstance.contributionOf.call(userFirst).then(function (result) {
@@ -197,7 +213,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFirst', 'fails to deposit using by adding to their deposit that than exceeds the maxEthAllocation will allow per account'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = parseInt(web3.toWei('1', 'ether'));
@@ -214,7 +230,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userSecond', 'deposits the maxEthAllocation for their contribution'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the max ether per account
             return rocketPoolCrowdsaleInstance.maxEthAllocation.call().then(function (result) {
@@ -235,7 +251,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
     }); // End Test  
 
     it(printTitle('userThird', 'makes successful deposit to crowdsale of 1.33333945012327895 ether'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = web3.toWei('1.33333945012327895', 'ether');
@@ -253,7 +269,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userThird', 'fails to attempt early withdrawl of tokens'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Transaction
             return rocketPoolCrowdsaleInstance.claimTokensAndRefund({ from: userThird, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function(result) {
@@ -264,15 +280,26 @@ contract('RocketPoolCrowdsale', function (accounts) {
                 return checkThrow(error);
             });
         });    
-    }); // End Test     
+    }); // End Test   
 
 
+    it(printTitle('depositAddress', 'fails to finalise crowdsale while its still running'), function () {
+        // Crowdsale contract   
+        return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
+            // Transaction
+            return rocketPoolCrowdsaleInstance.finaliseFunding({ from: depositAddress, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function(result) {
+                   return result;
+            }).then(function(result) { 
+            assert(false, "Expect throw but didn't.");
+            }).catch(function (error) {
+                return checkThrow(error);
+            });
+        });    
+    }); // End Test   
 
-    // ******* Crowdsale hits block < 16, closes **************
-
- 
-    it(printTitle('userFourth', 'makes successful deposit to crowdsale of 0.5 ether'), function () {
-        // Check RocketHub is deployed first    
+     
+     it(printTitle('userFourth', 'makes successful deposit to crowdsale of 0.5 ether'), function () {
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = web3.toWei('0.5', 'ether');
@@ -287,11 +314,15 @@ contract('RocketPoolCrowdsale', function (accounts) {
             });
         });    
     }); // End Test   
-    
+
+
+
+    // ******* Crowdsale hits end block, closes **************
+
 
   
     it(printTitle('userFourth', 'fails to make deposit to crowdsale of 0.5 ether as crowdsale end block is hit'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Contribute amount
             var sendAmount = web3.toWei('0.5', 'ether');
@@ -308,7 +339,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFifth', 'fails to make a withdrawal without having contributed anything'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Transaction
             return rocketPoolCrowdsaleInstance.claimTokensAndRefund({ from: userFifth, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function(result) {
@@ -323,7 +354,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFirst', 'gets the total amount of contributions'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the contribution balance of their account now
             return rocketPoolCrowdsaleInstance.contributedTotal.call(userFirst).then(function (result) {
@@ -334,7 +365,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFirst', 'withdraws his tokens and gets refund'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the users current ether balance
             var userFirstBalance = web3.eth.getBalance(userFirst).valueOf();
@@ -373,7 +404,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userSecond', 'withdraws her tokens and gets refund'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the users current ether balance
             var userSecondBalance = web3.eth.getBalance(userSecond).valueOf();
@@ -410,7 +441,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userSecond', 'fails to withdraw again'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Transaction
             return rocketPoolCrowdsaleInstance.claimTokensAndRefund({ from: userSecond, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function(result) {
@@ -425,7 +456,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userThird', 'withdraws his tokens and gets refund'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the users current ether balance
             var userThirdBalance = web3.eth.getBalance(userThird).valueOf();
@@ -462,7 +493,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('userFourth', 'withdraws his tokens and gets refund'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Get the users current ether balance
             var userFourthBalance = web3.eth.getBalance(userFourth).valueOf();
@@ -500,7 +531,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
 
 
     it(printTitle('tokenContract', 'should have distrubuted all tokens from its account now to the users'), function () {
-        // Check RocketHub is deployed first    
+        // Crowdsale contract   
         return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
             // Distributed tokens
             var tokenTotalOfUsers = 0;
@@ -538,6 +569,48 @@ contract('RocketPoolCrowdsale', function (accounts) {
                
         });    
     }); // End Test 
+
+
+    it(printTitle('userFifth', 'fails to finalise the crowdsale as they are not the depositAddress'), function () {
+        // Crowdsale contract   
+        return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
+            // Transaction
+            return rocketPoolCrowdsaleInstance.finaliseFunding({ from: userFifth, to: rocketPoolCrowdsaleInstance.address, gas: 250000 }).then(function(result) {
+                   return result;
+            }).then(function(result) { 
+            assert(false, "Expect throw but didn't.");
+            }).catch(function (error) {
+                return checkThrow(error);
+            });
+        });    
+    }); // End Test 
+
+
+    it(printTitle('depositAddress', 'finalises the crowdsale and receives the ether'), function () {
+        // Crowdsale contract   
+        return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
+            // Get the users current ether balance
+            var depositAddressBalance = web3.eth.getBalance(depositAddress).valueOf();
+            // Transaction
+            return rocketPoolCrowdsaleInstance.finaliseFunding({ from: depositAddress, to: rocketPoolCrowdsaleInstance.address, gas: 550000 }).then(function(result) {
+                // Get the users current ether balance after
+                var depositAddressBalanceAfter = web3.eth.getBalance(depositAddress).valueOf();
+                // Our event values
+                var ethSentToAddress = '';
+                var ethValueSent = 0;
+                // Go through our events
+                for (var i = 0; i < result.logs.length; i++) {
+                    if (result.logs[i].event == 'FinaliseSale') {
+                        ethSentToAddress = result.logs[i].args._sender;
+                        ethValueSent = result.logs[i].args._value;
+                    }
+                }  
+                return ethValueSent == targetEth && ethSentToAddress == depositAddress ? true : false;
+            }).then(function (result) {
+                assert.isTrue(result, "Finalised crowdsale and ether sent.");
+            });
+        });    
+    }); // End Test   
    
 });
 

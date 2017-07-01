@@ -15,8 +15,8 @@ var network = options.network;
 // If we are on local, the depositAddress is the coinbase
 tokenSettings.depositAddress = network == 'development' ? web3.eth.coinbase : tokenSettings.depositAddress;
 
-console.log(tokenSettings);
-console.log(crowdsaleSettings);
+//console.log(tokenSettings);
+//console.log(crowdsaleSettings);
 
 // Deploy now
 module.exports = function(deployer) {
