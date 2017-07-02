@@ -15,18 +15,22 @@ module.exports = {
             // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
             depositAddress: 0,
         },  
-        // The crowdsale parameters  
-        crowdsale: {
-            // What the crowdsale is aiming for - 5 Ether
-            targetEth: units.convert('5', 'ether', 'wei'),
-            // Max ether allowed per account 2 Ether
-            maxEthAllocation: units.convert('3', 'ether', 'wei'),
-            // Start block
-            fundingStartBlock: 5,
-            // End block
-            fundingEndBlock: 17
+        // The sale contracts
+        salesContracts: {
+            // Type of contract ie presale, crowdsale, quarterly 
+            'crowdsale': {
+                // What the sale is aiming for - 5 Ether
+                targetEth: units.convert('5', 'ether', 'wei'),
+                // Max ether allowed per account 2 Ether
+                contributionLimit: units.convert('3', 'ether', 'wei'),
+                // Start block
+                fundingStartBlock: 5,
+                // End block
+                fundingEndBlock: 17,
+                // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
+                depositAddress: 0
+            }
         }  
-      
       },
     
   }
