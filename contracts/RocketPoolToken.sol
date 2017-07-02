@@ -105,7 +105,7 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _depositAddress The address that receives the ether for that sale contract
     /// @param _upgradeExistingContractAddress The existing address that will be upgraded using the new supplied contract at _saleAddress
     function setSaleContract(address _saleAddress, string _saleContractType, uint256 _targetEth, uint256 _startBlock, uint256 _endBlock, uint256 _contributionLimit, address _depositAddress, address _upgradeExistingContractAddress) public onlyOwner  {
-        if(_saleAddress != 0x0) {
+        if(_saleAddress != 0x0 && _depositAddress != 0x0) {
             // Are we upgrading a previously deployed contract?
             if(_upgradeExistingContractAddress != 0x0 && salesAddresses[_upgradeExistingContractAddress].exists == true && salesAddresses[_upgradeExistingContractAddress].finalised == false) {
                 // The deployed contract must have a method called 'Upgrade' for this to work, will move funds to the new contract and perform any other upgrade actions
@@ -125,6 +125,8 @@ contract RocketPoolToken is StandardToken, Owned {
                 finalised: false,     
                 exists: true                      
             });
+        }else{
+            throw;
         }
     }
 
