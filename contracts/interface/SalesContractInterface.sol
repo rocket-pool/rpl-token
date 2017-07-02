@@ -20,6 +20,8 @@ contract SaleContractInterface {
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value); 
     /*** Methods ****************/
+     /// @dev Returns the address of the contract to use for accepting deposits, should always be called before showing the address to users for depositing
+    function getDepositAddress() public returns (address);
     /// @dev A method for upgrading this sales contract
     function upgrade(address _upgradedSaleContractAddress) onlyTokenContract public returns (bool);
 }

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.10;
 import "./base/Owned.sol";
 import "./base/StandardToken.sol";
-import "./interface/SaleContractInterface.sol";
+import "./interface/SalesContractInterface.sol";
 import "./lib/Arithmetic.sol";
 
 /// @title The main Rocket Pool Token (RPL) contract
@@ -103,14 +103,15 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _endBlock The end block when to finish minting tokens
     /// @param _contributionLimit The max ether amount per account that a user is able to pledge, passing 0 means unlimited
     /// @param _depositAddress The address that receives the ether for that sale contract
-    function setSaleContract(address _saleAddress, string _saleContractType, uint256 _targetEth, uint256 _startBlock, uint256 _endBlock, uint256 _contributionLimit, address _depositAddress, bool _isUpgrade) public onlyOwner  {
+    /// @param _upgradeExistingContractAddress The existing address that will be upgraded using the new supplied contract at _saleAddress
+    function setSaleContract(address _saleAddress, string _saleContractType, uint256 _targetEth, uint256 _startBlock, uint256 _endBlock, uint256 _contributionLimit, address _depositAddress, address _upgradeExistingContractAddress) public onlyOwner  {
         if(_saleAddress != 0x0) {
             // Are we upgrading a previously deployed contract?
-            if(_isUpgrade == true && salesAddresses[_saleAddress].exists == true && salesAddresses[_saleAddress].finalised == false) {
+            if(_upgradeExistingContractAddress != 0x0 && salesAddresses[_upgradeExistingContractAddress].exists == true && salesAddresses[_upgradeExistingContractAddress].finalised == false) {
                 // The deployed contract must have a method called 'Upgrade' for this to work, will move funds to the new contract and perform any other upgrade actions
-                SaleContractInterface saleContract = SaleContractInterface(_saleAddress);
+                SaleContractInterface saleContract = SaleContractInterface(_upgradeExistingContractAddress);
                 // Only proceed if the upgrade works
-                if(!saleContract.upgrade()) throw;
+                if(!saleContract.upgrade(_saleAddress)) throw;
             }
             // Add the new sales contract
             salesAddresses[_saleAddress] = salesAddress({

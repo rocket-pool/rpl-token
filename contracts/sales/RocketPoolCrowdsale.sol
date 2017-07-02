@@ -1,6 +1,6 @@
 pragma solidity ^0.4.10;
 import "../RocketPoolToken.sol";
-import "../interface/SaleContractInterface.sol";
+import "../interface/SalesContractInterface.sol";
 import "../lib/Arithmetic.sol";
 
 
@@ -16,10 +16,15 @@ contract RocketPoolCrowdsale is SaleContractInterface {
 
     // Constructor
     /// @dev RPL Crowdsale Init
-    /// @param _rplTokenAddress The main token contract address
+    /// @param _tokenContractAddress The main token contract address
     function RocketPoolCrowdsale(address _tokenContractAddress) {
         // Set the main token address
         tokenContractAddress = _tokenContractAddress;
+    }
+
+    /// @dev Returns the deposit address for this sales contract
+    function getDepositAddress() public returns (address) {
+        return this;
     }
 
     /// @dev Required for sales contracts that can be upgraded

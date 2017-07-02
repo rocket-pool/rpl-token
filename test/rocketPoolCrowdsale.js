@@ -81,7 +81,9 @@ contract('RocketPoolCrowdsale', function (accounts) {
             // End block
             fundingEndBlock: 0,
             // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-            depositAddress: 0
+            depositAddress: 0,
+            // Upgrading an existing sales contract here
+            upgradeExistingContractAddress: 0
         }
     }
 
@@ -101,7 +103,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
                         tokensReservedForRP = result.valueOf();
                         // Set the total available supply now
                         totalSupplyAvailable = totalSupply - tokensReservedForRP;
-                        console.log(exponent, totalSupply, tokensReservedForRP, totalSupplyAvailable);
+                        // console.log(exponent, totalSupply, tokensReservedForRP, totalSupplyAvailable);
                     });
                 });
             });
@@ -117,7 +119,12 @@ contract('RocketPoolCrowdsale', function (accounts) {
             return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
                 // Get the contract details
                 return rocketPoolTokenInstance.getSaleContract.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
-                    console.log(result.valueOf());
+                    var salesContract = result.valueOf();
+                    saleContracts.crowdsale.targetEth = salesContract[0];
+                    saleContracts.crowdsale.contributionLimit = salesContract[1];
+                    saleContracts.crowdsale.fundingStartBlock = salesContract[2];
+                    saleContracts.crowdsale.fundingEndBlock = salesContract[3];
+                    saleContracts.crowdsale.depositAddress = salesContract[4];
                 });
             });
         });
@@ -129,13 +136,22 @@ contract('RocketPoolCrowdsale', function (accounts) {
         // Crowdsale contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Transaction
-            return rocketPoolTokenInstance.setSaleAddress(saleContracts, nodeFirstOracleID, nodeFirstInstanceID, { from:userFirst, gas: nodeRegisterGas }).then(function (result) {
-                return result;
-            }).then(function(result) { 
-               assert(false, "Expect throw but didn't.");
-            }).catch(function (error) {
-                return checkThrow(error);
-            });
+            return rocketPoolTokenInstance.setSaleContract(
+                userFirst, 
+                'myowncontract',
+                saleContracts.crowdsale.targetEth, 
+                saleContracts.crowdsale.fundingStartBlock,
+                saleContracts.crowdsale.fundingEndBlock,
+                saleContracts.crowdsale.contributionLimit,
+                saleContracts.crowdsale.depositAddress,
+                saleContracts.crowdsale.upgradeExistingContractAddress,
+                { from:userFirst, gas: 250000 }).then(function (result) {
+                    return result;
+                }).then(function(result) { 
+                assert(false, "Expect throw but didn't.");
+                }).catch(function (error) {
+                    return checkThrow(error);
+                });
         });    
     }); // End Test  
     

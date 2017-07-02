@@ -39,7 +39,8 @@ module.exports = function(deployer) {
                 salesContractsSettings.crowdsale.contributionLimit,
                 salesContractsSettings.crowdsale.fundingStartBlock,
                 salesContractsSettings.crowdsale.fundingEndBlock,
-                crowdsaleDepositAddress
+                crowdsaleDepositAddress,
+                salesContractsSettings.crowdsale.upgradeExistingContractAddress
             );
             console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Contract - Crowdsale');
             console.log(rocketPoolCrowdsale.address);

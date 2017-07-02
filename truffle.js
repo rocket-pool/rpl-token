@@ -28,7 +28,9 @@ module.exports = {
                 // End block
                 fundingEndBlock: 17,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-                depositAddress: 0
+                depositAddress: 0,
+                // Upgrading an existing sales contract here
+                upgradeExistingContractAddress: 0
             }
         }  
       },
