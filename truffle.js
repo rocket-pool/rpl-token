@@ -21,6 +21,8 @@ module.exports = {
             'crowdsale': {
                 // What the sale is aiming for - 5 Ether
                 targetEth: units.convert('5', 'ether', 'wei'),
+                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
+                maxTokens: units.convert('20000000', 'ether', 'wei'), // 20 million
                 // Start block
                 fundingStartBlock: 5,
                 // End block

@@ -36,6 +36,7 @@ module.exports = function(deployer) {
                 rocketPoolCrowdsale.address,
                 'crowdsale',
                 salesContractsSettings.crowdsale.targetEth,
+                salesContractsSettings.crowdsale.maxTokens,
                 salesContractsSettings.crowdsale.fundingStartBlock,
                 salesContractsSettings.crowdsale.fundingEndBlock,
                 salesContractsSettings.crowdsale.contributionLimit,

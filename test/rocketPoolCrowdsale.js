@@ -74,6 +74,8 @@ contract('RocketPoolCrowdsale', function (accounts) {
         'crowdsale': {
             // What the sale is aiming for 
             targetEth: 0,
+            // Maximum tokens the contract can distribute 
+            maxTokens: 0,
             // Max ether allowed per account
             contributionLimit: 0,
             // Start block
@@ -121,7 +123,8 @@ contract('RocketPoolCrowdsale', function (accounts) {
                 return rocketPoolTokenInstance.getSaleContract.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
                     var salesContract = result.valueOf();
                     //console.log(salesContract);
-                    saleContracts.crowdsale.targetEth = salesContract[1];
+                    saleContracts.crowdsale.targetEth = salesContract[0];
+                    saleContracts.crowdsale.maxTokens = salesContract[1];
                     saleContracts.crowdsale.fundingStartBlock = salesContract[2];
                     saleContracts.crowdsale.fundingEndBlock = salesContract[3];
                     saleContracts.crowdsale.contributionLimit = salesContract[4];
@@ -144,6 +147,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
                     userFirst, 
                     'myowncontract',
                     saleContracts.crowdsale.targetEth, 
+                    saleContracts.crowdsale.maxTokens, 
                     saleContracts.crowdsale.fundingStartBlock,
                     saleContracts.crowdsale.fundingEndBlock,
                     saleContracts.crowdsale.contributionLimit,
@@ -160,7 +164,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
         });    
     }); // End Test  
 
-
+    /* TODO: Change this to just see if the current deployed contracts are ok
     it(printTitle('owner', 'registers crowdsale sale contract'), function () {
         // Crowdsale contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
@@ -170,7 +174,8 @@ contract('RocketPoolCrowdsale', function (accounts) {
                 return rocketPoolTokenInstance.setSaleContract(
                     rocketPoolCrowdsaleInstance.address, 
                     'crowdsale',
-                    saleContracts.crowdsale.targetEth, 
+                    saleContracts.crowdsale.targetEth,
+                    saleContracts.crowdsale.maxTokens,  
                     saleContracts.crowdsale.fundingStartBlock,
                     saleContracts.crowdsale.fundingEndBlock,
                     saleContracts.crowdsale.contributionLimit,
@@ -182,7 +187,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
                             var salesContract = result.valueOf();
                             // Check the target eth has been set and the deposit address too
 
-                            return salesContract[0] > 0 && salesContract[2] > 0 && salesContract[3] && salesContract[5] != 0;
+                            return salesContract[0] > 0 && salesContract[2] > 0 && salesContract[3] != 0 && salesContract[5] != 0;
                         }).then(function (result) {
                             assert.isTrue(result, "Crowdsale sale contract registered.");
                         }); 
@@ -190,7 +195,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
             });
         });    
     }); // End Test  
-    
+    */
 
     
    
