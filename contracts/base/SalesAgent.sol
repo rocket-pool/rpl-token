@@ -1,0 +1,52 @@
+pragma solidity ^0.4.10;
+
+import "../RocketPoolToken.sol";
+
+/// @title An sales agent for token sales contracts (ie crowdsale, presale, quarterly sale etc)
+/// @author David Rugendyke - http://www.rocketpool.net
+
+contract SalesAgent {
+
+     /**** Properties ***********/
+
+    address tokenContractAddress;                           // Main contract token address
+    uint256 targetEth;                                      // The target amount of ether to raise for this sales contract
+    mapping (address => uint256) public contributions;      // Contributions per address  
+    uint256 public contributedTotal;                        // Total ETH contributed                   
+
+    /**** Modifiers ***********/
+
+    /// @dev Only allow access from the main token contract
+    modifier onlyTokenContract() {
+        assert(tokenContractAddress != 0 && msg.sender == tokenContractAddress);
+        _;
+    }
+
+    /*** Events ****************/
+
+    event Contribute(address _sender, uint256 _value);
+    event FinaliseSale(address _sender, uint256 _value);
+    event RefundContribution(address _sender, uint256 _value);
+    event ClaimTokens(address _sender, uint256 _value); 
+
+    /*** Methods ****************/
+    
+    /// @dev Returns the deposit address for this sales contract
+    function getDepositAddress() public returns (address) {
+        return this;
+    }
+
+    /// @dev The address used for the depositAddress must checkin with the contract to verify it can interact with this contract, must happen or it won't accept funds
+    function getDepositAddressVerify() public {
+        // Get the token contract
+        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // Is it the right address? Will throw if incorrect
+        rocketPoolToken.setSaleContractDepositAddressVerified(msg.sender);
+    }
+
+    /// @dev Get the contribution total of ETH from a contributor
+    /// @param _owner The owners address
+    function getContributionOf(address _owner) constant returns (uint256 balance) {
+        return contributions[_owner];
+    }
+}

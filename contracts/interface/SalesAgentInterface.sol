@@ -1,10 +1,10 @@
 pragma solidity ^0.4.10;
 
 
-/// @title An interface for token sales contracts (ie crowdsale, presale, quarterly sale etc)
+/// @title An interface for token sales agent contracts (ie crowdsale, presale, quarterly sale etc)
 /// @author David Rugendyke - http://www.rocketpool.net
 
-contract SalesContractInterface {
+contract SalesAgentInterface {
      /**** Properties ***********/
     // Main contract token address
     address tokenContractAddress;
@@ -15,14 +15,10 @@ contract SalesContractInterface {
     // Total ETH contributed     
     uint256 public contributedTotal;                       
     /// @dev Only allow access from the main token contract
-    modifier onlyTokenContract() {
-        // Is this an authorised sale contract?
-        assert(msg.sender == tokenContractAddress);
-        _;
-    }
+    modifier onlyTokenContract() {_;}
     /*** Events ****************/
     event Contribute(address _sender, uint256 _value);
-    event FinaliseSale(address _sender, uint256 _value, uint256 _tokens);
+    event FinaliseSale(address _sender, uint256 _value);
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value); 
     /*** Methods ****************/
@@ -33,6 +29,4 @@ contract SalesContractInterface {
     /// @dev Get the contribution total of ETH from a contributor
     /// @param _owner The owners address
     function getContributionOf(address _owner) constant returns (uint256 balance);
-    /// @dev A method for upgrading this sales contract
-    function upgrade(address _upgradedSaleContractAddress) onlyTokenContract public returns (bool);
 }

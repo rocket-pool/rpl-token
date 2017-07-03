@@ -1,7 +1,7 @@
 pragma solidity ^0.4.10;
 import "./base/Owned.sol";
 import "./base/StandardToken.sol";
-import "./interface/SalesContractInterface.sol";
+import "./interface/SalesAgentInterface.sol";
 import "./lib/Arithmetic.sol";
 
 /// @title The main Rocket Pool Token (RPL) contract
@@ -76,7 +76,7 @@ contract RocketPoolToken is StandardToken, Owned {
     // @return A boolean that indicates if the operation was successful.
     function validateContribution(address _sender, uint256 _value) isSalesContract(msg.sender) returns (bool) {
         // Get an instance of the sale agent contract
-        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
         // Did they send anything?
         assert(_value > 0);  
         // Check the depositAddress has been verified by the account holder
@@ -100,7 +100,7 @@ contract RocketPoolToken is StandardToken, Owned {
     // @return A boolean that indicates if the operation was successful.
     function validateFinalising(address _sender) isSalesContract(msg.sender) returns (bool) {
         // Get an instance of the sale agent contract
-        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
         // Finalise the crowdsale funds
         assert(!salesAgents[msg.sender].finalised);                       
         // The address that will receive this contracts deposit, should match the original senders
@@ -121,7 +121,7 @@ contract RocketPoolToken is StandardToken, Owned {
     // @return A boolean that indicates if the operation was successful.
     function validateClaimTokens(address _sender) isSalesContract(msg.sender) returns (bool) {
         // Get an instance of the sale agent contract
-        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
         // Must have previously contributed
         assert(saleAgent.getContributionOf(_sender) > 0); 
         // Sale contract completed
@@ -245,33 +245,28 @@ contract RocketPoolToken is StandardToken, Owned {
     }
 
     /// @dev Returns true if this sales contract has finalised
-    /// @param _saleAddress The address of the sale agent contract
-    function getSaleContractIsFinalised(address _saleAddress) isSalesContract(_saleAddress) public returns(bool)  {
-        return salesAgents[_saleAddress].finalised;
+    function getSaleContractIsFinalised() isSalesContract(msg.sender) public returns(bool)  {
+        return salesAgents[msg.sender].finalised;
     }
 
     /// @dev Returns the address where the sale contracts ether will be deposited
-    /// @param _saleAddress The address of the sale agent contract
-    function getSaleContractDepositAddress(address _saleAddress) isSalesContract(_saleAddress) public returns(address)  {
-        return salesAgents[_saleAddress].depositAddress;
+    function getSaleContractDepositAddress() isSalesContract(msg.sender) public returns(address)  {
+        return salesAgents[msg.sender].depositAddress;
     }
 
     /// @dev Returns the start block for the sale agent
-    /// @param _saleAddress The address of the sale agent contract
-    function getSaleContractStartBlock(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
-        return salesAgents[_saleAddress].startBlock;
+    function getSaleContractStartBlock() isSalesContract(msg.sender) public returns(uint256)  {
+        return salesAgents[msg.sender].startBlock;
     }
 
     /// @dev Returns the start block for the sale agent
-    /// @param _saleAddress The address of the sale agent contract
-    function getSaleContractEndBlock(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
-        return salesAgents[_saleAddress].endBlock;
+    function getSaleContractEndBlock() isSalesContract(msg.sender) public returns(uint256)  {
+        return salesAgents[msg.sender].endBlock;
     }
 
     /// @dev Returns the max tokens for the sale agent
-    /// @param _saleAddress The address of the sale agent contract
-    function getSaleContractMaxTokens(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
-        return salesAgents[_saleAddress].maxTokens;
+    function getSaleContractMaxTokens() isSalesContract(msg.sender) public returns(uint256)  {
+        return salesAgents[msg.sender].maxTokens;
     }
     
 }

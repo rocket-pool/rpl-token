@@ -1,14 +1,13 @@
 pragma solidity ^0.4.10;
 import "../RocketPoolToken.sol";
-import "../interface/SalesContractInterface.sol";
-import "../lib/Arithmetic.sol";
+import "../base/SalesAgent.sol";
 
 
 /// @title The main Rocket Pool Token (RPL) reserve fund contract, reserved tokens for future dev work, code/bug bounties, audits, security and more
 /// @author David Rugendyke - http://www.rocketpool.net
 
 
-contract RocketPoolReserveFund is SalesContractInterface {
+contract RocketPoolReserveFund is SalesAgent {
 
     // Constructor
     /// @dev Sale Agent Init
@@ -16,14 +15,6 @@ contract RocketPoolReserveFund is SalesContractInterface {
     function RocketPoolReserveFund(address _tokenContractAddress) {
         // Set the main token address
         tokenContractAddress = _tokenContractAddress;
-    }
-
-    /// @dev The address used for the depositAddress must checkin with the contract to verify it can interact with this contract, must happen or it won't accept funds
-    function getDepositAddressVerify() public {
-        // Get the token contract
-        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Is it the right address? Will throw if incorrect
-        rocketPoolToken.setSaleContractDepositAddressVerified(msg.sender);
     }
 
     /// @dev Allows RP to collect the reserved tokens
@@ -37,7 +28,7 @@ contract RocketPoolReserveFund is SalesContractInterface {
             rocketPoolToken.getSaleContractMaxTokens()
         );
         // Fire the event
-        ClaimTokens(msg.sender, rocketPoolToken.balanceOf[msg.sender]);
+        ClaimTokens(msg.sender, rocketPoolToken.balanceOf(msg.sender));
     }
 
     
