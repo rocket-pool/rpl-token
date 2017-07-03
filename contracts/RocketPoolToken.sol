@@ -168,8 +168,7 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _endBlock The end block when to finish minting tokens
     /// @param _contributionLimit The max ether amount per account that a user is able to pledge, passing 0 means unlimited
     /// @param _depositAddress The address that receives the ether for that sale contract
-    /// @param _upgradeExistingContractAddress The existing address that will be upgraded using the new supplied contract at _saleAddress
-    function setSaleContract(
+    function setSaleAgentContract(
         address _saleAddress, 
          string _saleContractType, 
         uint256 _targetEth, 
@@ -177,9 +176,10 @@ contract RocketPoolToken is StandardToken, Owned {
         uint256 _startBlock, 
         uint256 _endBlock, 
         uint256 _contributionLimit, 
-        address _depositAddress, 
-        address _upgradeExistingContractAddress
-    ) public onlyOwner  
+        address _depositAddress
+    ) 
+    // Only the owner can register a new sale agent
+    public onlyOwner  
     {
         if(_saleAddress != 0x0 && _depositAddress != 0x0) {
             // Are we upgrading a previously deployed contract?

@@ -34,7 +34,7 @@ module.exports = function(deployer) {
                   // Register our sale agent contracts with the main token contract now
                   console.log("\n");
                   // Set the reserve fund contract
-                  rocketPoolTokenInstance.setSaleContract(
+                  rocketPoolTokenInstance.setSaleAgentContract(
                       rocketPoolReserveFund.address,
                       'reserveFund',
                       salesContractsSettings.reserveFund.targetEth,
@@ -44,12 +44,13 @@ module.exports = function(deployer) {
                       salesContractsSettings.reserveFund.contributionLimit,
                       reserveFundDepositAddress,
                       salesContractsSettings.crowdsale.upgradeExistingContractAddress
+                      , { from: web3.eth.coinbase }
                   );
                   console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - ReserveFund');
                   console.log(rocketPoolToken.address);
                   console.log("\n");
                   // Set the crowdsale contract
-                  rocketPoolTokenInstance.setSaleContract(
+                  rocketPoolTokenInstance.setSaleAgentContract(
                       rocketPoolCrowdsale.address,
                       'crowdsale',
                       salesContractsSettings.crowdsale.targetEth,
@@ -59,6 +60,7 @@ module.exports = function(deployer) {
                       salesContractsSettings.crowdsale.contributionLimit,
                       crowdsaleDepositAddress,
                       salesContractsSettings.crowdsale.upgradeExistingContractAddress
+                      , { from: web3.eth.coinbase }
                   );
                   console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Crowdsale');
                   console.log(rocketPoolCrowdsale.address);

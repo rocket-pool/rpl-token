@@ -1,6 +1,6 @@
 // Load contracts
 var rocketPoolToken = artifacts.require("./contract/RocketPoolToken.sol");
-var rocketPoolCrowdsale = artifacts.require("./contract/RocketPoolReserveFund.sol");
+var rocketPoolReserveFund = artifacts.require("./contract/RocketPoolReserveFund.sol");
 
 // Show events
 var displayEvents = false;
@@ -54,8 +54,7 @@ contract('RocketPoolReserveFund', function (accounts) {
     // Set our units
     var exponent = 0;
     var totalSupply = 0;
-    var totalSupplyAvailable = 0;
-    var tokensReservedForRP = 0;
+    var totalSupplyMinted = 0;
 
     // Set our crowdsale addresses
     var depositAddress = 0;
@@ -98,13 +97,67 @@ contract('RocketPoolReserveFund', function (accounts) {
                 // Set the total supply
                 return rocketPoolTokenInstance.totalSupply.call().then(function(result) {
                     totalSupply = result.valueOf();
-                    //console.log(exponent, totalSupply);
+                    // Set the total supply
+                    return rocketPoolTokenInstance.totalSupplyMinted.call().then(function(result) {
+                        totalSupplyMinted = result.valueOf();
+                        // console.log(exponent, totalSupply, totalSupplyMinted);
+                    });
                 });
             });
         });
     }); 
+
+
+    // Load our ReserveFund contract settings
+    it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Crowdsale contract   
+            return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
+                // Get the contract details
+                return rocketPoolTokenInstance.getSaleContract.call(rocketPoolReserveFund.address).then(function(result) {
+                    var salesContract = result.valueOf();
+                    //console.log(salesContract);
+                    saleContracts.reserveFund.targetEth = salesContract[0];
+                    saleContracts.reserveFund.maxTokens = salesContract[1];
+                    saleContracts.reserveFund.fundingStartBlock = salesContract[2];
+                    saleContracts.reserveFund.fundingEndBlock = salesContract[3];
+                    saleContracts.reserveFund.contributionLimit = salesContract[4];
+                    saleContracts.reserveFund.depositAddress = salesContract[5];
+
+                });
+            });
+        });
+    });   
+
+ 
    
-   
+    // Begin Tests
+    it(printTitle('userFirst', 'fails to register crowdsale contract as they are not the owner'), function () {
+        // Crowdsale contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Crowdsale contract   
+            return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
+                // Transaction
+                return rocketPoolTokenInstance.setSaleAgentContract(
+                    userFirst, 
+                    'myowncontract',
+                    saleContracts.reserveFund.targetEth, 
+                    saleContracts.reserveFund.maxTokens, 
+                    saleContracts.reserveFund.fundingStartBlock,
+                    saleContracts.reserveFund.fundingEndBlock,
+                    saleContracts.reserveFund.contributionLimit,
+                    saleContracts.reserveFund.depositAddress,
+                    { from:userFirst, gas: 250000 }).then(function (result) {
+                        return result;
+                    }).then(function(result) { 
+                    assert(false, "Expect throw but didn't.");
+                    }).catch(function (error) {
+                        return checkThrow(error);
+                    });
+            });
+        });    
+    }); // End Test  
    
 });
 
