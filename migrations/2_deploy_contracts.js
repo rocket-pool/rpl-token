@@ -1,7 +1,7 @@
 // Contracts
 var rocketPoolToken = artifacts.require("./RocketPoolToken.sol");
 var rocketPoolReserveFund = artifacts.require("./sales/RocketPoolReserveFund.sol");
-//var rocketPoolCrowdsale = artifacts.require("./sales/RocketPoolCrowdsale.sol");
+var rocketPoolCrowdsale = artifacts.require("./sales/RocketPoolCrowdsale.sol");
 
 // Libs
 var arithmeticLib = artifacts.require("./lib/Arithmetic.sol");
@@ -22,16 +22,14 @@ module.exports = function(deployer) {
   // Setup libs
   deployer.deploy(arithmeticLib);
   // Link libs
-  deployer.link(arithmeticLib, [rocketPoolToken]);
+  deployer.link(arithmeticLib, [rocketPoolToken, rocketPoolCrowdsale]);
   // Deploy Rocket Pool token first
   deployer.deploy(rocketPoolToken).then(function () {
     // Deploy reserve fund contract next
-      return deployer.deploy(rocketPoolReserveFund).then(function () {
+      return deployer.deploy(rocketPoolReserveFund, rocketPoolToken.address).then(function () {
           // Deploy crowdsales contract next
-          /*
           return deployer.deploy(rocketPoolCrowdsale, rocketPoolToken.address).then(function () {
               // Set everything the main token contract needs now
-              
               return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
                   // Register our sale agent contracts with the main token contract now
                   console.log("\n");
@@ -47,8 +45,8 @@ module.exports = function(deployer) {
                       reserveFundDepositAddress,
                       salesContractsSettings.crowdsale.upgradeExistingContractAddress
                   );
-                  console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Contract - Crowdsale');
-                  console.log(rocketPoolCrowdsale.address);
+                  console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - ReserveFund');
+                  console.log(rocketPoolToken.address);
                   console.log("\n");
                   // Set the crowdsale contract
                   rocketPoolTokenInstance.setSaleContract(
@@ -62,11 +60,10 @@ module.exports = function(deployer) {
                       crowdsaleDepositAddress,
                       salesContractsSettings.crowdsale.upgradeExistingContractAddress
                   );
-                  console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Contract - Crowdsale');
+                  console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Crowdsale');
                   console.log(rocketPoolCrowdsale.address);
               });
-              
-          });*/
+          });
       });
   });
 };
