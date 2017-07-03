@@ -105,13 +105,14 @@ contract('RocketPoolCrowdsale', function (accounts) {
                         tokensReservedForRP = result.valueOf();
                         // Set the total available supply now
                         totalSupplyAvailable = totalSupply - tokensReservedForRP;
-                        // console.log(exponent, totalSupply, tokensReservedForRP, totalSupplyAvailable);
+                        console.log(exponent, totalSupply, tokensReservedForRP, totalSupplyAvailable);
                     });
                 });
             });
         });
     }); 
 
+    return;    
 
     // Load our crowdsale contract settings
     it(printTitle('contractCrowdsale', 'load crowdsale contract settings'), function () {

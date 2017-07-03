@@ -17,14 +17,10 @@ contract RocketPoolToken is StandardToken, Owned {
     // Set our token units
     uint256 public constant decimals = 18;
     uint256 public exponent = 10**decimals;
-    uint256 public totalSupply = 50 * (10**6) * exponent;   // 50 Million tokens
-    uint256 public targetEth;                               // Target ETH to raise across all sales contracts                        
-    uint256 public tokenReserve;                            // The amount of tokens in perc reserved for RP future work
-    uint256 public tokenReservePerc;                        // How much % of the overall tokens are reserved for RP - given as % of 1 Ether (eg 15% = 0.15 Ether)
-    mapping (address => uint256) public contributions;      // Contributions per address   
-    uint256 public contributedTotal;                        // Total ETH contributed
+    uint256 public totalSupply = 50 * (10**6) * exponent;   // 50 Million tokens  
+    uint256 public totalSupplyMinted = 0;                   // The total of tokens currently minted by sales agent contracts                  
     
-
+    
     /*** Sale Addresses *********/
        
     mapping (address => salesAgent) private salesAgents;   // Our contract addresses of our sales contracts 
@@ -41,6 +37,7 @@ contract RocketPoolToken is StandardToken, Owned {
         uint256 endBlock;                   // The end block when to finish minting tokens
         uint256 contributionLimit;          // The max ether amount per account that a user is able to pledge, passing 0 means unlimited
         address depositAddress;             // The address that receives the ether for that sale contract
+        bool depositAddressCheckedIn;       // The address that receives the ether for that sale contract must check in with its sale contract to verify its a valid address that can interact
         bool finalised;                     // Has this sales contract been completed and the ether sent to the deposit address?
         bool exists;                        // Check to see if the mapping exists
     }
@@ -69,18 +66,78 @@ contract RocketPoolToken is StandardToken, Owned {
 
     /// @dev RPL Token Init
     function RocketPoolToken() {
-        // Set the token reserve percentage - given as % of 1 Ether
-        tokenReservePerc = 0.15 ether;
-        // Our token reserve amount
-        tokenReserve = Arithmetic.overflowResistantFraction(tokenReservePerc, totalSupply, exponent);
+        
     }
 
 
+    // @dev General validation for a sales agent contract receiving a contribution, additional validation can be done in the sale contract if required
+    // @param _sender The address sent the contribution
+    // @param _value The value of the contribution
+    // @return A boolean that indicates if the operation was successful.
+    function validateContribution(address _sender, uint256 _value) isSalesContract(msg.sender) returns (bool) {
+        // Get an instance of the sale agent contract
+        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        // Did they send anything?
+        assert(_value > 0);  
+        // Check the depositAddress has been verified by the account holder
+        assert(salesAgents[msg.sender].depositAddressCheckedIn == true);
+        // Check if we're ok to receive contributions, have we started?
+        assert(block.number > salesAgents[msg.sender].startBlock);       
+        // Already ended?
+        assert(block.number < salesAgents[msg.sender].endBlock);        
+        // Max sure the user has not exceeded their ether allocation - setting 0 means unlimited
+        if(salesAgents[msg.sender].contributionLimit > 0) {
+            // Get the users contribution so far
+            assert((saleAgent.getContributionOf(_sender) + _value) <= salesAgents[msg.sender].contributionLimit);   
+        }
+        // All good
+        return true;
+    }
+
+
+    // @dev General validation for a sales agent contract to be finalised
+    // @param _sender The address sent the request, should be the withdrawal
+    // @return A boolean that indicates if the operation was successful.
+    function validateFinalising(address _sender) isSalesContract(msg.sender) returns (bool) {
+        // Get an instance of the sale agent contract
+        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        // Finalise the crowdsale funds
+        assert(!salesAgents[msg.sender].finalised);                       
+        // The address that will receive this contracts deposit, should match the original senders
+        assert(salesAgents[msg.sender].depositAddress == _sender);            
+        // Not yet finished?
+        assert(block.number >= salesAgents[msg.sender].endBlock);         
+        // Not enough raised?
+        assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEth);
+        // We're done now
+        salesAgents[msg.sender].finalised = true;
+        // All good
+        return true;
+    }
+
+
+    // @dev General validation for a sales agent contract that requires the user claim the tokens after the sale has finished
+    // @param _sender The address sent the request
+    // @return A boolean that indicates if the operation was successful.
+    function validateClaimTokens(address _sender) isSalesContract(msg.sender) returns (bool) {
+        // Get an instance of the sale agent contract
+        SalesContractInterface saleAgent = SalesContractInterface(msg.sender);
+        // Must have previously contributed
+        assert(saleAgent.getContributionOf(_sender) > 0); 
+        // Sale contract completed
+        assert(block.number >= salesAgents[msg.sender].endBlock);  
+        // All good
+        return true;
+    }
+    
+
     // @dev Mint the Rocket Pool Tokens (RPL)
-    // @param _to The address that will recieve the minted tokens.
+    // @param _to The address that will receive the minted tokens.
     // @param _amount The amount of tokens to mint.
     // @return A boolean that indicates if the operation was successful.
     function mint(address _to, uint _amount) isSalesContract(msg.sender) returns (bool) {
+        // Check the depositAddress has been verified by the account holder
+        assert(salesAgents[msg.sender].depositAddressCheckedIn == true);
         // No minting if the sale contract has finalised
         assert(salesAgents[msg.sender].finalised == false);
         // Check if we're ok to mint new tokens, have we started?
@@ -89,15 +146,19 @@ contract RocketPoolToken is StandardToken, Owned {
         assert(block.number < salesAgents[msg.sender].endBlock); 
         // Verify ok balances and values
         assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
+        // Check we don't exceed the supply limit
+        assert((totalSupplyMinted + _amount) <= totalSupply);
         // Ok all good
         balances[_to] += _amount;
+        // Add to the total minted
+        totalSupplyMinted += _amount;
         // Fire the event
         mintToken(_to, _amount);
         // Completed
         return true; 
     }
 
-
+    
     /// @dev Set the address of a new crowdsale/presale contract agent if needed, usefull for upgrading
     /// @param _saleAddress The address of the new token sale contract
     /// @param _saleContractType Type of the contract ie. presale, crowdsale, quarterly
@@ -122,12 +183,14 @@ contract RocketPoolToken is StandardToken, Owned {
     {
         if(_saleAddress != 0x0 && _depositAddress != 0x0) {
             // Are we upgrading a previously deployed contract?
+            /* TODO: Make this safer by refunding users rather than transferring the ether to a new contract
             if(_upgradeExistingContractAddress != 0x0 && salesAgents[_upgradeExistingContractAddress].exists == true && salesAgents[_upgradeExistingContractAddress].finalised == false) {
                 // The deployed contract must have a method called 'Upgrade' for this to work, will move funds to the new contract and perform any other upgrade actions
                 SaleContractInterface saleContract = SaleContractInterface(_upgradeExistingContractAddress);
                 // Only proceed if the upgrade works
                 if(!saleContract.upgrade(_saleAddress)) throw;
             }
+            */
             // Count all the tokens currently available through our agents
             uint256 currentAvailableTokens = 0;
             for(uint256 i=0; i < salesAgentsAddresses.length; i++) {
@@ -135,7 +198,7 @@ contract RocketPoolToken is StandardToken, Owned {
             }
             // If maxTokens is set to 0, it means assign the rest of the available tokens
             _maxTokens = _maxTokens <= 0 ? totalSupply - currentAvailableTokens : _maxTokens;
-            // Can we cover this lot of tokens for the agent?
+            // Can we cover this lot of tokens for the agent if they are all minted?
             assert(_maxTokens > 0 && totalSupply >= (currentAvailableTokens + _maxTokens));
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
@@ -146,7 +209,8 @@ contract RocketPoolToken is StandardToken, Owned {
                 startBlock: _startBlock,                 
                 endBlock: _endBlock,  
                 contributionLimit: _contributionLimit,                 
-                depositAddress: _depositAddress,   
+                depositAddress: _depositAddress, 
+                depositAddressCheckedIn: false,  
                 finalised: false,     
                 exists: true                      
             });
@@ -155,6 +219,15 @@ contract RocketPoolToken is StandardToken, Owned {
         }else{
             throw;
         }
+    }
+
+    /// @dev Verifies if the current address matches the depositAddress
+    /// @param _verifyAddress The address to verify it matches the depositAddress given for the sales agent
+    function setSaleContractDepositAddressVerified(address _verifyAddress) isSalesContract(msg.sender) public  {
+        // Check its verified
+        assert(salesAgents[msg.sender].depositAddress == _verifyAddress && _verifyAddress != 0x0);
+        // Ok set it now
+        salesAgents[msg.sender].depositAddressCheckedIn = true;
     }
 
     /// @dev Fetch the main details of a crowdsale/presale contract
@@ -172,16 +245,33 @@ contract RocketPoolToken is StandardToken, Owned {
     }
 
     /// @dev Returns true if this sales contract has finalised
-    /// @param _saleAddress The address of the token sale contract
+    /// @param _saleAddress The address of the sale agent contract
     function getSaleContractIsFinalised(address _saleAddress) isSalesContract(_saleAddress) public returns(bool)  {
         return salesAgents[_saleAddress].finalised;
     }
 
-    /// @dev Get the contribution total of ETH from a contributor
-    /// @param _owner The owners address
-    function contributionOf(address _owner) constant returns (uint256 balance) {
-        return contributions[_owner];
+    /// @dev Returns the address where the sale contracts ether will be deposited
+    /// @param _saleAddress The address of the sale agent contract
+    function getSaleContractDepositAddress(address _saleAddress) isSalesContract(_saleAddress) public returns(address)  {
+        return salesAgents[_saleAddress].depositAddress;
     }
 
+    /// @dev Returns the start block for the sale agent
+    /// @param _saleAddress The address of the sale agent contract
+    function getSaleContractStartBlock(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
+        return salesAgents[_saleAddress].startBlock;
+    }
+
+    /// @dev Returns the start block for the sale agent
+    /// @param _saleAddress The address of the sale agent contract
+    function getSaleContractEndBlock(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
+        return salesAgents[_saleAddress].endBlock;
+    }
+
+    /// @dev Returns the max tokens for the sale agent
+    /// @param _saleAddress The address of the sale agent contract
+    function getSaleContractMaxTokens(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256)  {
+        return salesAgents[_saleAddress].maxTokens;
+    }
     
 }
