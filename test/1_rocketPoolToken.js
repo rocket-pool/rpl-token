@@ -124,7 +124,6 @@ contract('RocketPoolToken', function (accounts) {
                     saleContracts.reserveFund.fundingEndBlock = salesContract[3];
                     saleContracts.reserveFund.contributionLimit = salesContract[4];
                     saleContracts.reserveFund.depositAddress = salesContract[5];
-
                 });
             });
         });
@@ -160,7 +159,6 @@ contract('RocketPoolToken', function (accounts) {
     }); // End Test  
 
 
-    // Begin Tests
     it(printTitle('userFirst', 'fails to call mint function on main token contract'), function () {
         // Contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {

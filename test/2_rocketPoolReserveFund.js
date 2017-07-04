@@ -88,6 +88,25 @@ contract('RocketPoolReserveFund', function (accounts) {
         }
     }
 
+    // Load our token contract settings
+    it(printTitle('contractToken', 'load token contract settings'), function () {
+        // Crowdsale contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Set the exponent
+            return rocketPoolTokenInstance.exponent.call().then(function(result) {
+                exponent = result.valueOf();
+                // Set the total supply
+                return rocketPoolTokenInstance.totalSupply.call().then(function(result) {
+                    totalSupply = result.valueOf();
+                    // Set the total supply
+                    return rocketPoolTokenInstance.totalSupplyMinted.call().then(function(result) {
+                        totalSupplyMinted = result.valueOf();
+                        // console.log(exponent, totalSupply, totalSupplyMinted);
+                    });
+                });
+            });
+        });
+    });     
 
     // Load our ReserveFund contract settings
     it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
@@ -178,11 +197,20 @@ contract('RocketPoolReserveFund', function (accounts) {
                 return rocketPoolReserveFundInstance.claimReserveTokens({ from: owner, gas: 250000 }).then(function (result) {
                     // Token contract   
                     return rocketPoolTokenInstance.balanceOf.call(owner).then(function (result) {
-                        var tokenBalance = result.valueOf();
-                        return tokenBalance == saleContracts.reserveFund.maxTokens ? true : false;
-                    }).then(function (result) {
-                        assert.isTrue(result, "Tokens sent to depositAddress.");
-                    });    
+                        // Get our token balance now
+                        var tokenBalance = parseFloat(result.valueOf());
+                        // Get the total supply
+                        return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
+                            totalSupply = parseFloat(result.valueOf());
+                            // Get the total supply minted
+                            return rocketPoolTokenInstance.totalSupplyMinted.call().then(function (result) {
+                                totalSupplyMinted = parseFloat(result.valueOf());
+                                return tokenBalance == saleContracts.reserveFund.maxTokens && totalSupplyMinted == tokenBalance ? true : false;
+                            }).then(function (result) {
+                                assert.isTrue(result, "Tokens sent to depositAddress.");
+                            });
+                        });
+                    });
                 });
             });
         });
