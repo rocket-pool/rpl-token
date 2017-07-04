@@ -48,7 +48,7 @@ var checkThrow = function (error) {
 
 
 // Start the token and agent tests now
-contract('RocketPoolReserveFund', function (accounts) {
+contract('RocketPoolToken', function (accounts) {
 
 
     // Set our units
@@ -134,9 +134,9 @@ contract('RocketPoolReserveFund', function (accounts) {
    
     // Begin Tests
     it(printTitle('userFirst', 'fails to register crowdsale contract as they are not the owner'), function () {
-        // Crowdsale contract   
+        // Contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Crowdsale contract   
+            // Contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Transaction
                 return rocketPoolTokenInstance.setSaleAgentContract(
@@ -155,6 +155,22 @@ contract('RocketPoolReserveFund', function (accounts) {
                     }).catch(function (error) {
                         return checkThrow(error);
                     });
+            });
+        });    
+    }); // End Test  
+
+
+    // Begin Tests
+    it(printTitle('userFirst', 'fails to call mint function on main token contract'), function () {
+        // Contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Transaction
+            return rocketPoolTokenInstance.mint(userFirst, 100, { from:userFirst, gas: 250000 }).then(function (result) {
+                    return result;
+            }).then(function(result) { 
+                assert(false, "Expect throw but didn't.");
+            }).catch(function (error) {
+                return checkThrow(error);
             });
         });    
     }); // End Test  

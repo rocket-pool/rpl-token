@@ -19,14 +19,16 @@ contract RocketPoolReserveFund is SalesAgent {
 
     /// @dev Allows RP to collect the reserved tokens
     function claimReserveTokens() external {
+        // Get our main token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Check this is called by our depositAddress
-        assert(rocketPoolToken.getSaleContractDepositAddress() == msg.sender);
         // The max tokens assigned to this sale agent contract is our reserve fund, mint these to our deposit address for this agent
+        // Will throw if minting conditions are not met, ie depositAddressCheckedIn is false, sale has been finalised
         rocketPoolToken.mint(
-            rocketPoolToken.getSaleContractDepositAddress(),
-            rocketPoolToken.getSaleContractMaxTokens()
+            rocketPoolToken.getSaleContractDepositAddress(this),
+            rocketPoolToken.getSaleContractMaxTokens(this)
         );
+        // Finalise this sale, will verify the senders address, contribution amount and more - throws if basic finalisation settings are not met
+        rocketPoolToken.setSaleContractFinalised(msg.sender);  
         // Fire the event
         ClaimTokens(msg.sender, rocketPoolToken.balanceOf(msg.sender));
     }

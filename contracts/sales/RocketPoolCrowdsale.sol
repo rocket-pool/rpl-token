@@ -21,6 +21,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
     }
 
+
     /// @dev Returns the deposit address for this sales contract
     function getDepositAddress() public returns (address) {
         return this;
@@ -52,9 +53,9 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
-        if(rocketPoolToken.validateFinalising(msg.sender)) {
+        if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress().send(targetEth)) throw;
+            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
             // Fire event
             FinaliseSale(msg.sender, targetEth);
         }
@@ -80,7 +81,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 RefundContribution(msg.sender, userContributionTotal);
             } else {
                 // Max tokens alloted to this sale agent contract
-                uint256 totalTokens = rocketPoolToken.getSaleContractMaxTokens();
+                uint256 totalTokens = rocketPoolToken.getSaleContractMaxTokens(this);
                 // Calculate what percent of the ether raised came from me
                 uint256 percEtherContributed = Arithmetic.overflowResistantFraction(userContributionTotal, exponent, contributedTotal);
                 // Calculate how many tokens I get, don't include the reserve left for RP

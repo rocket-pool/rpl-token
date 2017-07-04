@@ -15,7 +15,7 @@ module.exports = {
             // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
             depositAddress: 0,
         },  
-        // The sale contractstruffl
+        // The sale contracts
         salesContracts: {
             // Type of contract ie presale, crowdsale, quarterly 
             'reserveFund': {
@@ -25,8 +25,8 @@ module.exports = {
                 maxTokens: units.convert('7500000', 'ether', 'wei'), // 7.5 million - 15%
                 // Start block
                 fundingStartBlock: 0,
-                // End block
-                fundingEndBlock: 9999999999,
+                // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
+                fundingEndBlock: 0,
                 // Max ether allowed per account
                 contributionLimit: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
@@ -41,7 +41,7 @@ module.exports = {
                 maxTokens: units.convert('20000000', 'ether', 'wei'), // 20 million
                 // Start block
                 fundingStartBlock: 5,
-                // End block
+                // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 17,
                 // Max ether allowed per account 2 Ether
                 contributionLimit: units.convert('3', 'ether', 'wei'),

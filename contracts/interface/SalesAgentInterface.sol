@@ -24,8 +24,6 @@ contract SalesAgentInterface {
     /*** Methods ****************/
     /// @dev The address used for the depositAddress must checkin with the contract to verify it can interact with this contract, must happen or it won't accept funds
     function getDepositAddressVerify() public;
-    /// @dev Returns the address of the contract to use for accepting deposits, should always be called before showing the address to users for depositing
-    function getDepositAddress() public returns (address);
     /// @dev Get the contribution total of ETH from a contributor
     /// @param _owner The owners address
     function getContributionOf(address _owner) constant returns (uint256 balance);

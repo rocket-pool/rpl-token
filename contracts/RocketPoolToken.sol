@@ -95,27 +95,6 @@ contract RocketPoolToken is StandardToken, Owned {
     }
 
 
-    // @dev General validation for a sales agent contract to be finalised
-    // @param _sender The address sent the request, should be the withdrawal
-    // @return A boolean that indicates if the operation was successful.
-    function validateFinalising(address _sender) isSalesContract(msg.sender) returns (bool) {
-        // Get an instance of the sale agent contract
-        SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
-        // Finalise the crowdsale funds
-        assert(!salesAgents[msg.sender].finalised);                       
-        // The address that will receive this contracts deposit, should match the original senders
-        assert(salesAgents[msg.sender].depositAddress == _sender);            
-        // Not yet finished?
-        assert(block.number >= salesAgents[msg.sender].endBlock);         
-        // Not enough raised?
-        assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEth);
-        // We're done now
-        salesAgents[msg.sender].finalised = true;
-        // All good
-        return true;
-    }
-
-
     // @dev General validation for a sales agent contract that requires the user claim the tokens after the sale has finished
     // @param _sender The address sent the request
     // @return A boolean that indicates if the operation was successful.
@@ -142,8 +121,8 @@ contract RocketPoolToken is StandardToken, Owned {
         assert(salesAgents[msg.sender].finalised == false);
         // Check if we're ok to mint new tokens, have we started?
         assert(block.number > salesAgents[msg.sender].startBlock);       
-        // Has the sale period finished?
-        assert(block.number < salesAgents[msg.sender].endBlock); 
+        // Has the sale period finished? If the end block is set to 0, the sale continues until the sale agents supply runs out or its finalised
+        assert((block.number < salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
         // Verify ok balances and values
         assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
         // Check we don't exceed the supply limit
@@ -221,6 +200,30 @@ contract RocketPoolToken is StandardToken, Owned {
         }
     }
 
+
+    /// @dev Sets the contract sale agent process as completed, that sales agent is now retired
+    function setSaleContractFinalised(address _sender) isSalesContract(msg.sender) public returns(bool)  {
+        // Get an instance of the sale agent contract
+        SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
+        // Finalise the crowdsale funds
+        assert(!salesAgents[msg.sender].finalised);                       
+        // The address that will receive this contracts deposit, should match the original senders
+        assert(salesAgents[msg.sender].depositAddress == _sender);            
+        // If the end block is 0, it means an open ended crowdsale, once it's finalised, the end block is set to the current one
+        if(salesAgents[msg.sender].endBlock == 0) {
+            salesAgents[msg.sender].endBlock = block.number;
+        }
+        // Not yet finished?
+        assert(block.number >= salesAgents[msg.sender].endBlock);         
+        // Not enough raised?
+        assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEth);
+        // We're done now
+        salesAgents[msg.sender].finalised = true;
+        // All good
+        return true;
+    }
+
+
     /// @dev Verifies if the current address matches the depositAddress
     /// @param _verifyAddress The address to verify it matches the depositAddress given for the sales agent
     function setSaleContractDepositAddressVerified(address _verifyAddress) isSalesContract(msg.sender) public  {
@@ -230,42 +233,54 @@ contract RocketPoolToken is StandardToken, Owned {
         salesAgents[msg.sender].depositAddressCheckedIn = true;
     }
 
+
     /// @dev Fetch the main details of a crowdsale/presale contract
-    /// @param _saleAddress The address of the new token sale contract
-    function getSaleContract(address _saleAddress) isSalesContract(_saleAddress) public returns(uint256, uint256, uint256, uint256, uint256, address)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContract(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256, uint256, uint256, uint256, uint256, address)  {
         // Return the sales contract struct as a tuple type
         return(
-            salesAgents[_saleAddress].targetEth,
-            salesAgents[_saleAddress].maxTokens,
-            salesAgents[_saleAddress].startBlock,
-            salesAgents[_saleAddress].endBlock,
-            salesAgents[_saleAddress].contributionLimit,
-            salesAgents[_saleAddress].depositAddress
+            salesAgents[_salesAgentAddress].targetEth,
+            salesAgents[_salesAgentAddress].maxTokens,
+            salesAgents[_salesAgentAddress].startBlock,
+            salesAgents[_salesAgentAddress].endBlock,
+            salesAgents[_salesAgentAddress].contributionLimit,
+            salesAgents[_salesAgentAddress].depositAddress
         ); 
     }
 
     /// @dev Returns true if this sales contract has finalised
-    function getSaleContractIsFinalised() isSalesContract(msg.sender) public returns(bool)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractIsFinalised(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
         return salesAgents[msg.sender].finalised;
     }
 
     /// @dev Returns the address where the sale contracts ether will be deposited
-    function getSaleContractDepositAddress() isSalesContract(msg.sender) public returns(address)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractDepositAddress(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(address)  {
         return salesAgents[msg.sender].depositAddress;
     }
 
+    /// @dev Returns the true if the sale agents deposit address has been verified
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractDepositAddressVerified(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
+        return salesAgents[_salesAgentAddress].depositAddressCheckedIn;
+    }
+
     /// @dev Returns the start block for the sale agent
-    function getSaleContractStartBlock() isSalesContract(msg.sender) public returns(uint256)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractStartBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[msg.sender].startBlock;
     }
 
     /// @dev Returns the start block for the sale agent
-    function getSaleContractEndBlock() isSalesContract(msg.sender) public returns(uint256)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractEndBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[msg.sender].endBlock;
     }
 
     /// @dev Returns the max tokens for the sale agent
-    function getSaleContractMaxTokens() isSalesContract(msg.sender) public returns(uint256)  {
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractMaxTokens(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[msg.sender].maxTokens;
     }
     

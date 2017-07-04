@@ -29,24 +29,24 @@ contract SalesAgent {
     event RefundContribution(address _sender, uint256 _value);
     event ClaimTokens(address _sender, uint256 _value); 
 
+    /*** Tests *****************/
+
+    event FlagUint(uint256 flag);
+    event FlagAddress(address flag);
+
     /*** Methods ****************/
     
-    /// @dev Returns the deposit address for this sales contract
-    function getDepositAddress() public returns (address) {
-        return this;
-    }
-
-    /// @dev The address used for the depositAddress must checkin with the contract to verify it can interact with this contract, must happen or it won't accept funds
-    function getDepositAddressVerify() public {
-        // Get the token contract
-        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Is it the right address? Will throw if incorrect
-        rocketPoolToken.setSaleContractDepositAddressVerified(msg.sender);
-    }
-
     /// @dev Get the contribution total of ETH from a contributor
     /// @param _owner The owners address
     function getContributionOf(address _owner) constant returns (uint256 balance) {
         return contributions[_owner];
+    }
+
+    /// @dev The address used for the depositAddress must checkin with the contract to verify it can interact with this contract, must happen or it won't accept funds
+    function setDepositAddressVerify() public {
+        // Get the token contract
+        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // Is it the right address? Will throw if incorrect
+        rocketPoolToken.setSaleContractDepositAddressVerified(msg.sender);
     }
 }
