@@ -86,6 +86,7 @@ contract('RocketPoolToken', function (accounts) {
         }
     }
 
+  
     
     // Load our token contract settings
     it(printTitle('contractToken', 'load token contract settings'), function () {
@@ -98,7 +99,7 @@ contract('RocketPoolToken', function (accounts) {
                 return rocketPoolTokenInstance.totalSupply.call().then(function(result) {
                     totalSupply = result.valueOf();
                     // Set the total supply cap
-                    return rocketPoolTokenInstance.totalSupplyMinted.call().then(function(result) {
+                    return rocketPoolTokenInstance.totalSupplyCap.call().then(function(result) {
                         totalSupplyCap = result.valueOf();
                         // console.log(exponent, totalSupply, totalSupplyMinted);
                     });
@@ -107,6 +108,8 @@ contract('RocketPoolToken', function (accounts) {
         });
     }); 
 
+
+  
 
     // Load our ReserveFund contract settings
     it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {

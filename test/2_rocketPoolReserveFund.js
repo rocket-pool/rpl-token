@@ -99,14 +99,15 @@ contract('RocketPoolReserveFund', function (accounts) {
                 return rocketPoolTokenInstance.totalSupply.call().then(function(result) {
                     totalSupply = result.valueOf();
                     // Set the total supply cap
-                    return rocketPoolTokenInstance.totalSupplyMinted.call().then(function(result) {
+                    return rocketPoolTokenInstance.totalSupplyCap.call().then(function(result) {
                         totalSupplyCap = result.valueOf();
                         // console.log(exponent, totalSupply, totalSupplyMinted);
                     });
                 });
             });
         });
-    });      
+    });    
+      
 
     // Load our ReserveFund contract settings
     it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
@@ -199,13 +200,13 @@ contract('RocketPoolReserveFund', function (accounts) {
                     return rocketPoolTokenInstance.balanceOf.call(owner).then(function (result) {
                         // Get our token balance now
                         var tokenBalance = parseFloat(result.valueOf());
-                        // Get the total supply
-                        return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
-                            totalSupply = parseFloat(result.valueOf());
+                        // Get the total supply cap
+                        return rocketPoolTokenInstance.totalSupplyCap.call().then(function (result) {
+                            totalSupplyCap = parseFloat(result.valueOf());
                             // Get the total supply minted
-                            return rocketPoolTokenInstance.totalSupplyMinted.call().then(function (result) {
-                                totalSupplyMinted = parseFloat(result.valueOf());
-                                return tokenBalance == saleContracts.reserveFund.maxTokens && totalSupplyMinted == tokenBalance ? true : false;
+                            return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
+                                totalSupply = parseFloat(result.valueOf());
+                                return tokenBalance == saleContracts.reserveFund.maxTokens && totalSupply == tokenBalance ? true : false;
                             }).then(function (result) {
                                 assert.isTrue(result, "Tokens sent to depositAddress.");
                             });

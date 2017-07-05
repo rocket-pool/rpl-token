@@ -17,8 +17,8 @@ contract RocketPoolToken is StandardToken, Owned {
     // Set our token units
     uint256 public constant decimals = 18;
     uint256 public exponent = 10**decimals;
-    uint256 public totalSupply = 0;                             // The total of tokens currently minted by sales agent contracts     
-    uint256 public totalSupplyCap = 50 * (10**6) * exponent;    // 50 Million tokens max supply               
+    uint256 public totalSupply = 0;                             // The total of tokens currently minted by sales agent contracts    
+    uint256 public totalSupplyCap = 50 * (10**6) * exponent;    // 50 Million tokens                                 
     
     
     /*** Sale Addresses *********/
@@ -125,7 +125,7 @@ contract RocketPoolToken is StandardToken, Owned {
         assert((block.number < salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
         // Verify ok balances and values
         assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
-        // Check we don't exceed the supply cap
+        // Check we don't exceed the supply limit
         assert((totalSupply + _amount) <= totalSupplyCap);
         // Ok all good
         balances[_to] += _amount;
@@ -176,9 +176,9 @@ contract RocketPoolToken is StandardToken, Owned {
                currentAvailableTokens += salesAgents[salesAgentsAddresses[i]].maxTokens;
             }
             // If maxTokens is set to 0, it means assign the rest of the available tokens
-            _maxTokens = _maxTokens <= 0 ? totalSupply - currentAvailableTokens : _maxTokens;
+            _maxTokens = _maxTokens <= 0 ? totalSupplyCap - currentAvailableTokens : _maxTokens;
             // Can we cover this lot of tokens for the agent if they are all minted?
-            assert(_maxTokens > 0 && totalSupply >= (currentAvailableTokens + _maxTokens));
+            assert(_maxTokens > 0 && totalSupplyCap >= (currentAvailableTokens + _maxTokens));
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       
