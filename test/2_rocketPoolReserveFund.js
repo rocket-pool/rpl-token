@@ -56,7 +56,7 @@ contract('RocketPoolReserveFund', function (accounts) {
     // Set our units
     var exponent = 0;
     var totalSupply = 0;
-    var totalSupplyMinted = 0;
+    var totalSupplyCap = 0;
 
     // Set our crowdsale addresses
     var depositAddress = 0;
@@ -95,18 +95,18 @@ contract('RocketPoolReserveFund', function (accounts) {
             // Set the exponent
             return rocketPoolTokenInstance.exponent.call().then(function(result) {
                 exponent = result.valueOf();
-                // Set the total supply
+                // Set the total supply currently in existance
                 return rocketPoolTokenInstance.totalSupply.call().then(function(result) {
                     totalSupply = result.valueOf();
-                    // Set the total supply
+                    // Set the total supply cap
                     return rocketPoolTokenInstance.totalSupplyMinted.call().then(function(result) {
-                        totalSupplyMinted = result.valueOf();
+                        totalSupplyCap = result.valueOf();
                         // console.log(exponent, totalSupply, totalSupplyMinted);
                     });
                 });
             });
         });
-    });     
+    });      
 
     // Load our ReserveFund contract settings
     it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {

@@ -17,8 +17,8 @@ contract RocketPoolToken is StandardToken, Owned {
     // Set our token units
     uint256 public constant decimals = 18;
     uint256 public exponent = 10**decimals;
-    uint256 public totalSupply = 50 * (10**6) * exponent;   // 50 Million tokens  
-    uint256 public totalSupplyMinted = 0;                   // The total of tokens currently minted by sales agent contracts                  
+    uint256 public totalSupply = 0;                             // The total of tokens currently minted by sales agent contracts     
+    uint256 public totalSupplyCap = 50 * (10**6) * exponent;    // 50 Million tokens max supply               
     
     
     /*** Sale Addresses *********/
@@ -125,12 +125,12 @@ contract RocketPoolToken is StandardToken, Owned {
         assert((block.number < salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
         // Verify ok balances and values
         assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
-        // Check we don't exceed the supply limit
-        assert((totalSupplyMinted + _amount) <= totalSupply);
+        // Check we don't exceed the supply cap
+        assert((totalSupply + _amount) <= totalSupplyCap);
         // Ok all good
         balances[_to] += _amount;
         // Add to the total minted
-        totalSupplyMinted += _amount;
+        totalSupply += _amount;
         // Fire the event
         mintToken(_to, _amount);
         // Completed
