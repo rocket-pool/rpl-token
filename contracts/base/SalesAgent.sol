@@ -49,4 +49,5 @@ contract SalesAgent {
         // Is it the right address? Will throw if incorrect
         rocketPoolToken.setSaleContractDepositAddressVerified(msg.sender);
     }
+
 }

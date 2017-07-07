@@ -21,7 +21,6 @@ contract RocketPoolCrowdsale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
     }
 
-
     /// @dev Returns the deposit address for this sales contract
     function getDepositAddress() public returns (address) {
         return this;
@@ -52,7 +51,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
     function finaliseFunding() external {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Do some common contribution validation, will throw if an error occurs
+        // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
             if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
@@ -95,13 +94,4 @@ contract RocketPoolCrowdsale is SalesAgent  {
     }
 
 
-    /*
-    /// @dev Required for sales contracts that can be upgraded
-    /// @param _upgradedSaleContractAddress The address of the new sales contract that will replace this one
-    function upgrade(address _upgradedSaleContractAddress) onlyTokenContract public returns (bool) {
-        // Move any funds collected to the new contract, new contract must have a default payable method to accept
-        if(!_upgradedSaleContractAddress.call.value(this.balance)()) throw;
-        // All good
-        return true;
-    }*/
 }

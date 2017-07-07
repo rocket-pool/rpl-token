@@ -33,6 +33,8 @@ contract RocketPoolToken is StandardToken, Owned {
         bytes32 saleContractType;           // Type of the contract ie. presale, crowdsale 
         uint256 targetEth;                  // The amount of ether to raise to consider this contracts sales completed
         uint256 maxTokens;                  // The maximum amount of tokens this sale contract is allowed to distribute
+        uint256 minDeposit;                 // The minimum deposit amount allowed
+        uint256 maxDeposit;                 // The maximum deposit amount allowed
         uint256 startBlock;                 // The start block when allowed to mint tokens
         uint256 endBlock;                   // The end block when to finish minting tokens
         uint256 contributionLimit;          // The max ether amount per account that a user is able to pledge, passing 0 means unlimited
@@ -65,9 +67,7 @@ contract RocketPoolToken is StandardToken, Owned {
     /**** Methods ***********/
 
     /// @dev RPL Token Init
-    function RocketPoolToken() {
-        
-    }
+    function RocketPoolToken() {}
 
 
     // @dev General validation for a sales agent contract receiving a contribution, additional validation can be done in the sale contract if required
@@ -82,9 +82,13 @@ contract RocketPoolToken is StandardToken, Owned {
         // Check the depositAddress has been verified by the account holder
         assert(salesAgents[msg.sender].depositAddressCheckedIn == true);
         // Check if we're ok to receive contributions, have we started?
-        assert(block.number > salesAgents[msg.sender].startBlock);       
+        assert(block.number >= salesAgents[msg.sender].startBlock);       
         // Already ended?
-        assert(block.number < salesAgents[msg.sender].endBlock);        
+        assert(block.number <= salesAgents[msg.sender].endBlock); 
+        // Is it above the min deposit amount?
+        assert(_value >= salesAgents[msg.sender].minDeposit); 
+        // Is it below the max deposit allowed?
+        assert(_value <= salesAgents[msg.sender].maxDeposit);        
         // Max sure the user has not exceeded their ether allocation - setting 0 means unlimited
         if(salesAgents[msg.sender].contributionLimit > 0) {
             // Get the users contribution so far
@@ -120,9 +124,9 @@ contract RocketPoolToken is StandardToken, Owned {
         // No minting if the sale contract has finalised
         assert(salesAgents[msg.sender].finalised == false);
         // Check if we're ok to mint new tokens, have we started?
-        assert(block.number > salesAgents[msg.sender].startBlock);       
+        assert(block.number >= salesAgents[msg.sender].startBlock);       
         // Has the sale period finished? If the end block is set to 0, the sale continues until the sale agents supply runs out or its finalised
-        assert((block.number < salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
+        assert((block.number <= salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
         // Verify ok balances and values
         assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
         // Check we don't exceed the supply limit
@@ -143,6 +147,8 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _saleContractType Type of the contract ie. presale, crowdsale, quarterly
     /// @param _targetEth The amount of ether to raise to consider this contracts sales completed
     /// @param _maxTokens The maximum amount of tokens this sale contract is allowed to distribute
+    /// @param _minDeposit The minimum deposit amount allowed
+    /// @param _maxDeposit The maximum deposit amount allowed
     /// @param _startBlock The start block when allowed to mint tokens
     /// @param _endBlock The end block when to finish minting tokens
     /// @param _contributionLimit The max ether amount per account that a user is able to pledge, passing 0 means unlimited
@@ -152,6 +158,8 @@ contract RocketPoolToken is StandardToken, Owned {
          string _saleContractType, 
         uint256 _targetEth, 
         uint256 _maxTokens, 
+        uint256 _minDeposit,
+        uint256 _maxDeposit,
         uint256 _startBlock, 
         uint256 _endBlock, 
         uint256 _contributionLimit, 
@@ -161,15 +169,6 @@ contract RocketPoolToken is StandardToken, Owned {
     public onlyOwner  
     {
         if(_saleAddress != 0x0 && _depositAddress != 0x0) {
-            // Are we upgrading a previously deployed contract?
-            /* TODO: Make this safer by refunding users rather than transferring the ether to a new contract
-            if(_upgradeExistingContractAddress != 0x0 && salesAgents[_upgradeExistingContractAddress].exists == true && salesAgents[_upgradeExistingContractAddress].finalised == false) {
-                // The deployed contract must have a method called 'Upgrade' for this to work, will move funds to the new contract and perform any other upgrade actions
-                SaleContractInterface saleContract = SaleContractInterface(_upgradeExistingContractAddress);
-                // Only proceed if the upgrade works
-                if(!saleContract.upgrade(_saleAddress)) throw;
-            }
-            */
             // Count all the tokens currently available through our agents
             uint256 currentAvailableTokens = 0;
             for(uint256 i=0; i < salesAgentsAddresses.length; i++) {
@@ -179,12 +178,16 @@ contract RocketPoolToken is StandardToken, Owned {
             _maxTokens = _maxTokens <= 0 ? totalSupplyCap - currentAvailableTokens : _maxTokens;
             // Can we cover this lot of tokens for the agent if they are all minted?
             assert(_maxTokens > 0 && totalSupplyCap >= (currentAvailableTokens + _maxTokens));
+            // Make sure the min deposit is less than or equal to the max
+            assert(_minDeposit <= _maxDeposit);
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       
                 saleContractType: sha3(_saleContractType),         
                 targetEth: _targetEth,   
-                maxTokens: _maxTokens,              
+                maxTokens: _maxTokens,  
+                minDeposit: _minDeposit,
+                maxDeposit: _maxDeposit,            
                 startBlock: _startBlock,                 
                 endBlock: _endBlock,  
                 contributionLimit: _contributionLimit,                 
@@ -214,7 +217,7 @@ contract RocketPoolToken is StandardToken, Owned {
             salesAgents[msg.sender].endBlock = block.number;
         }
         // Not yet finished?
-        assert(block.number >= salesAgents[msg.sender].endBlock);         
+        assert(block.number > salesAgents[msg.sender].endBlock);         
         // Not enough raised?
         assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEth);
         // We're done now
@@ -252,6 +255,12 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractIsFinalised(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
         return salesAgents[msg.sender].finalised;
+    }
+
+    /// @dev Returns the target amount of ether the contract wants to raise
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractTargetEther(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[msg.sender].targetEth;
     }
 
     /// @dev Returns the address where the sale contracts ether will be deposited
