@@ -31,6 +31,7 @@ contract SalesAgent {
 
     /*** Tests *****************/
 
+    event FlagInt(int256 flag);
     event FlagUint(uint256 flag);
     event FlagAddress(address flag);
 

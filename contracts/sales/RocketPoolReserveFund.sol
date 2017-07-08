@@ -25,7 +25,7 @@ contract RocketPoolReserveFund is SalesAgent {
         // Will throw if minting conditions are not met, ie depositAddressCheckedIn is false, sale has been finalised
         rocketPoolToken.mint(
             rocketPoolToken.getSaleContractDepositAddress(this),
-            rocketPoolToken.getSaleContractMaxTokens(this)
+            rocketPoolToken.getSaleContractTokensLimit(this)
         );
         // Finalise this sale, will verify the senders address, contribution amount and more - throws if basic finalisation settings are not met
         rocketPoolToken.setSaleContractFinalised(msg.sender);  

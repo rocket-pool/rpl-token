@@ -74,7 +74,7 @@ contract('RocketPoolToken', function (accounts) {
             // What the sale is aiming for 
             targetEth: 0,
             // Maximum tokens the contract can distribute 
-            maxTokens: 0,
+            tokensLimit: 0,
             // Max ether allowed per account
             contributionLimit: 0,
             // Start block
@@ -122,7 +122,7 @@ contract('RocketPoolToken', function (accounts) {
                     var salesContract = result.valueOf();
                     //console.log(salesContract);
                     saleContracts.reserveFund.targetEth = salesContract[0];
-                    saleContracts.reserveFund.maxTokens = salesContract[1];
+                    saleContracts.reserveFund.tokensLimit = salesContract[1];
                     saleContracts.reserveFund.fundingStartBlock = salesContract[2];
                     saleContracts.reserveFund.fundingEndBlock = salesContract[3];
                     saleContracts.reserveFund.contributionLimit = salesContract[4];
@@ -145,7 +145,9 @@ contract('RocketPoolToken', function (accounts) {
                     userFirst, 
                     'myowncontract',
                     saleContracts.reserveFund.targetEth, 
-                    saleContracts.reserveFund.maxTokens, 
+                    saleContracts.reserveFund.tokensLimit, 
+                    0,
+                    100,
                     saleContracts.reserveFund.fundingStartBlock,
                     saleContracts.reserveFund.fundingEndBlock,
                     saleContracts.reserveFund.contributionLimit,

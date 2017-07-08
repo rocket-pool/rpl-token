@@ -76,7 +76,7 @@ contract('RocketPoolReserveFund', function (accounts) {
             // What the sale is aiming for 
             targetEth: 0,
             // Maximum tokens the contract can distribute 
-            maxTokens: 0,
+            tokensLimit: 0,
             // Max ether allowed per account
             contributionLimit: 0,
             // Start block
@@ -120,7 +120,7 @@ contract('RocketPoolReserveFund', function (accounts) {
                     var salesContract = result.valueOf();
                     //console.log(salesContract);
                     saleContracts.reserveFund.targetEth = salesContract[0];
-                    saleContracts.reserveFund.maxTokens = salesContract[1];
+                    saleContracts.reserveFund.tokensLimit = salesContract[1];
                     saleContracts.reserveFund.fundingStartBlock = salesContract[2];
                     saleContracts.reserveFund.fundingEndBlock = salesContract[3];
                     saleContracts.reserveFund.contributionLimit = salesContract[4];
@@ -206,7 +206,7 @@ contract('RocketPoolReserveFund', function (accounts) {
                             // Get the total supply minted
                             return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
                                 totalSupply = parseFloat(result.valueOf());
-                                return tokenBalance == saleContracts.reserveFund.maxTokens && totalSupply == tokenBalance ? true : false;
+                                return tokenBalance == saleContracts.reserveFund.tokensLimit && totalSupply == tokenBalance ? true : false;
                             }).then(function (result) {
                                 assert.isTrue(result, "Tokens sent to depositAddress.");
                             });

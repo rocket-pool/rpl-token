@@ -73,7 +73,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
             // What the sale is aiming for 
             targetEth: 0,
             // Maximum tokens the contract can distribute 
-            maxTokens: 0,
+            tokensLimit: 0,
             // Max ether allowed per account
             contributionLimit: 0,
             // Start block
@@ -118,7 +118,7 @@ contract('RocketPoolCrowdsale', function (accounts) {
                     var salesContract = result.valueOf();
                     //console.log(salesContract);
                     saleContracts.crowdsale.targetEth = salesContract[0];
-                    saleContracts.crowdsale.maxTokens = salesContract[1];
+                    saleContracts.crowdsale.tokensLimit = salesContract[1];
                     saleContracts.crowdsale.fundingStartBlock = salesContract[2];
                     saleContracts.crowdsale.fundingEndBlock = salesContract[3];
                     saleContracts.crowdsale.contributionLimit = salesContract[4];

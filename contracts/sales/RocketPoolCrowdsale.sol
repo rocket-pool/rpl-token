@@ -21,16 +21,6 @@ contract RocketPoolCrowdsale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
     }
 
-    /// @dev Returns the deposit address for this sales contract
-    function getDepositAddress() public returns (address) {
-        return this;
-    }
-
-    /// @dev Get the contribution total of ETH from a contributor
-    /// @param _owner The owners address
-    function getContributionOf(address _owner) constant returns (uint256 balance) {
-        return contributions[_owner];
-    }
 
     /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
     function() payable external { 
@@ -54,7 +44,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
+            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(rocketPoolToken.getSaleContractTargetEther(this))) throw;
             // Fire event
             FinaliseSale(msg.sender, targetEth);
         }
@@ -66,6 +56,8 @@ contract RocketPoolCrowdsale is SalesAgent  {
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
+        // Set the target ether amount locally
+        uint256 targetEth = rocketPoolToken.getSaleContractTargetEther(this);
         // Do some common contribution validation, will throw if an error occurs
         if(rocketPoolToken.validateClaimTokens(msg.sender)) {
             // The users contribution
@@ -80,7 +72,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 RefundContribution(msg.sender, userContributionTotal);
             } else {
                 // Max tokens alloted to this sale agent contract
-                uint256 totalTokens = rocketPoolToken.getSaleContractMaxTokens(this);
+                uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
                 // Calculate what percent of the ether raised came from me
                 uint256 percEtherContributed = Arithmetic.overflowResistantFraction(userContributionTotal, exponent, contributedTotal);
                 // Calculate how many tokens I get, don't include the reserve left for RP
