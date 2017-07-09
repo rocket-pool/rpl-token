@@ -211,7 +211,6 @@ contract('rocketPoolPresale', function (accounts) {
     }); // End Test    
 
 
-    // Just testing atm
     it(printTitle('userFirst', 'deposits more ether than he\'s allocated, receives all his tokens and a refund'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
@@ -239,16 +238,16 @@ contract('rocketPoolPresale', function (accounts) {
                         return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
                             // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
                             var userFirstTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
-                            // The amount of expected tokens - use parseInt to avoid differences in minute rounding errors between js and solidity
+                            // The amount of expected tokens - use toFixed to avoid miniscule rounding errors between js and solidity
                             var expectedTokens = parseFloat(web3.fromWei(presaleEtherAllocation / tokenPriceInEther, 'ether')).toFixed(6);
                             //console.log(refund);
                             //console.log((sendAmount - presaleEtherAllocation));
                             //console.log(userFirstTokens);
                             //console.log(expectedTokens);
                             // Make sure the refund is correct and the user has the correct amount of tokens
-                            return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens;
+                            return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens ? true : false;
                         }).then(function (result) {
-                            assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
+                            assert.isTrue(result, "useFirst receives correct amount of tokens and refund.");
                         });
                     }); 
                 });
@@ -256,52 +255,136 @@ contract('rocketPoolPresale', function (accounts) {
         });
     }); // End Test    
 
-    return;
 
-    /*
-    // Begin Tests
-    it(printTitle('userFirst', 'fails to deposit before the presale begins'), function () {
-        // Token contract   
-        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // presale contract   
-            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
-                // Contribute amount
-                var sendAmount = web3.toWei('1', 'ether');
-                // Transaction
-                return rocketPoolPresaleInstance.sendTransaction({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                    return result;
-                }).then(function (result) {
-                    assert(false, "Expect throw but didn't.");
-                }).catch(function (error) {
-                    return checkThrow(error);
-                });
-            });
-        });
-    }); // End Test  
-    
-    return;
-
-
-    it(printTitle('userFirst', 'fails to deposit by sending more than the maxEthAllocation will allow per account'), function () {
+    it(printTitle('userFirst', 'fails to deposit again after he\'s used up his ether allocation'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // presale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
                 // Contribute amount = 1 ether more than allowed
-                var sendAmount = web3.toWei('1', 'ether');
-                // Transaction
-                return rocketPoolPresaleInstance.sendTransaction({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                    return false;
-                    return result;
-                }).then(function (result) {
-                    assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
-                });  
+                var sendAmount = web3.toWei('0.5', 'ether');
+                var userBalance = web3.eth.getBalance(userFirst).valueOf();
+                var contractBalance = web3.eth.getBalance(rocketPoolPresaleInstance.address).valueOf();
+                // Get the amount that's allocated to the presale user
+                return rocketPoolPresaleInstance.getPresaleAllocation.call(userFirst).then(function (result) {
+                    // Get the amount
+                    var presaleEtherAllocation = result.valueOf();
+                    // Transaction
+                    return rocketPoolPresaleInstance.createTokens({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                        return result;
+                    }).then(function(result) { 
+                        assert(false, "Expect throw but didn't.");
+                    }).catch(function (error) {
+                        return checkThrow(error);
+                    });
+                });
             });
         });
     }); // End Test    
 
-    */
+
+   var sendAmountSecondUserFirstTime = web3.toWei('0.56342343', 'ether');
+   var tokenTotalSecondUserFirstTime = 0;
+
+   it(printTitle('userSecond', 'deposits less ether than he\'s allocated, receives part of his tokens and no refund'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Contribute amount = 1 ether more than allowed
+                var sendAmount = sendAmountSecondUserFirstTime;
+                var userBalance = web3.eth.getBalance(userSecond).valueOf();
+                var contractBalance = web3.eth.getBalance(rocketPoolPresaleInstance.address).valueOf();
+                // Get the amount that's allocated to the presale user
+                return rocketPoolPresaleInstance.getPresaleAllocation.call(userSecond).then(function (result) {
+                    // Get the amount
+                    var presaleEtherAllocation = result.valueOf();
+                    // Transaction
+                    return rocketPoolPresaleInstance.createTokens({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                        // Setup our check vars
+                        var refund = 0;
+                        for(var i=0; i < result.logs.length; i++) {
+                            if(result.logs[i].event == 'Refund') {
+                                refund = result.logs[i].args._value.valueOf();
+                            }
+                        };
+                        //console.log(presaleEtherAllocation, refund, (sendAmount - presaleEtherAllocation));
+                        // Get the token balance of their account now after withdrawing
+                        return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                            // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
+                            var userSecondTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
+                            tokenTotalSecondUserFirstTime = userSecondTokens;
+                            // The amount of expected tokens - use parseInt to avoid differences in minute rounding errors between js and solidity
+                            var expectedTokens = parseFloat(web3.fromWei(sendAmount / tokenPriceInEther, 'ether')).toFixed(6);
+                            //console.log(refund);
+                            //console.log(parseInt(sendAmount))
+                            //console.log(parseInt(presaleEtherAllocation));
+                            //console.log(userSecondTokens);
+                            //console.log(expectedTokens);
+                            // Make sure the refund is correct and the user has the correct amount of tokens
+                            return refund == 0 && userSecondTokens == expectedTokens && parseInt(sendAmount) < parseInt(presaleEtherAllocation) ? true : false;
+                        }).then(function (result) {
+                            assert.isTrue(result, "userSecond receives correct amount of tokens and refund.");
+                        });
+                    }); 
+                });
+            });
+        });
+    }); // End Test    
     
+
+    it(printTitle('userSecond', 'deposits the exact amount of ether required to get the rest of his tokens and receives no refund'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Get the balances
+                var userBalance = web3.eth.getBalance(userSecond).valueOf();
+                var contractBalance = web3.eth.getBalance(rocketPoolPresaleInstance.address).valueOf();
+                // Get the amount that's allocated to the presale user
+                return rocketPoolPresaleInstance.getPresaleAllocation.call(userSecond).then(function (result) {
+                    // Get the amount
+                    var presaleEtherAllocation = result.valueOf();
+                    // How much to send to equal the exact amount required
+                    var sendAmount = presaleEtherAllocation - sendAmountSecondUserFirstTime;
+                    // Transaction
+                    return rocketPoolPresaleInstance.createTokens({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                        // Setup our check vars
+                        var refund = 0;
+                        for(var i=0; i < result.logs.length; i++) {
+                            if(result.logs[i].event == 'Refund') {
+                                refund = result.logs[i].args._value.valueOf();
+                            }
+                        };
+                        //console.log(presaleEtherAllocation, refund, (sendAmount - presaleEtherAllocation));
+                        // Get the token balance of their account now after withdrawing
+                        return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                            // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
+                            var userSecondTokensTotal = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
+                            // The amount of expected tokens - use parseInt to avoid differences in minute rounding errors between js and solidity
+                            var expectedTokens = parseFloat(web3.fromWei(sendAmount / tokenPriceInEther, 'ether')).toFixed(6);
+                            //console.log(refund);
+                            //console.log(parseInt(sendAmount))
+                            //console.log(parseInt(presaleEtherAllocation));
+                            //console.log(userSecondTokensTotal);
+                            //console.log(expectedTokens);
+                            console.log(userSecondTokensTotal);
+                            console.log(tokenTotalSecondUserFirstTime);
+                            console.log(expectedTokens);
+                            //console.log((parseFloat(expectedTokens) + parseFloat(tokenTotalSecondUserFirstTime)));
+                            // Make sure the refund is correct and the user has the correct amount of tokens
+                            return refund == 0 && userSecondTokensTotal == (expectedTokens + tokenTotalSecondUserFirstTime) && parseInt(sendAmount) < parseInt(presaleEtherAllocation) ? true : false;
+                        }).then(function (result) {
+                            assert.isTrue(result, "userSecond receives correct amount of tokens and refund.");
+                        });
+                    }); 
+                });
+            });
+        });
+    }); // End Test 
+
+
+    // TODO: Add third user that deposits the exact amount required
 
    
 });

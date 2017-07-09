@@ -51,8 +51,8 @@ contract RocketPoolPresale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
         // The presale addresses and reserved amounts, if a presale user does not buy all their tokens, they roll into the public crowdsale which follows this one
         // NOTE: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2] if running the unit tests
-        addPresaleAllocation(0x63542866ff406cb5e3f6613b2441428b1078721f, 2 ether);
-        addPresaleAllocation(0xa94dcfc64993f8b259942ccadb8056dea3d6ac84, 1 ether);
+        addPresaleAllocation(0xfb3e47f962e17138ba70673600ec44d9e56ed8c8, 2 ether);
+        addPresaleAllocation(0x1d8fc78558c0c0997cb87391eb08b9b2336406ae, 1 ether);
     }
 
 
@@ -117,14 +117,14 @@ contract RocketPoolPresale is SalesAgent  {
         //       Testnet and mainnet work as expected
         // Calculate the ether price of each token using the target max Eth and total tokens available for this agent, so tokenPrice = maxTargetEth / totalTokensForSale
         uint256 tokenPrice = Arithmetic.overflowResistantFraction(rocketPoolToken.getSaleContractTargetEtherMax(this), exponent, totalTokens);
-        // Total tokens they will receive
-        //uint256 tokenAmountToMint = (contributions[msg.sender] / tokenPrice) * exponent;
+        // Total tokens they will receive - TODO: Figure out calculating previous amount sent
         uint256 tokenAmountToMint = Arithmetic.overflowResistantFraction(contributions[msg.sender], exponent, tokenPrice);
         // Mint the tokens and give them to the user now
         if(rocketPoolToken.mint(msg.sender, tokenAmountToMint)) {
 
         }
         
+        FlagUint(refundAmount);
         FlagUint(contributions[msg.sender]);
         FlagUint(tokenPrice);
         FlagUint(tokenAmountToMint);
