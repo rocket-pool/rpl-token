@@ -24,10 +24,10 @@ contract SalesAgent {
 
     /*** Events ****************/
 
-    event Contribute(address _sender, uint256 _value);
-    event FinaliseSale(address _sender, uint256 _value);
-    event RefundContribution(address _sender, uint256 _value);
-    event ClaimTokens(address _sender, uint256 _value); 
+    event Contribute(address _agent, address _sender, uint256 _value);
+    event FinaliseSale(address _agent, address _sender, uint256 _value);
+    event Refund(address _agent, address _sender, uint256 _value);
+    event ClaimTokens(address _agent, address _sender, uint256 _value); 
 
     /*** Tests *****************/
 

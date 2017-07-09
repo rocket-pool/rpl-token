@@ -54,6 +54,8 @@ contract('rocketPoolPresale', function (accounts) {
     var exponent = 0;
     var totalSupply = 0;
     var totalSupplyCap = 0;
+    // Token price for presale is calculated as maxTargetEth / tokensLimit
+    var tokenPriceInEther = 0;
 
     // Set our presale addresses
     var depositAddress = 0;
@@ -70,8 +72,10 @@ contract('rocketPoolPresale', function (accounts) {
     var saleContracts = {
         // Type of contract ie presale, presale, quarterly 
         'presale': {
-            // What the sale is aiming for 
-            targetEth: 0,
+            // The min amount to raise to consider the sale a success
+            targetEthMin: 0,
+            // The max amount the sale agent can raise
+            targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
             // Max ether allowed per account
@@ -99,12 +103,12 @@ contract('rocketPoolPresale', function (accounts) {
                     // Set the total supply cap
                     return rocketPoolTokenInstance.totalSupplyCap.call().then(function(result) {
                         totalSupplyCap = result.valueOf();
-                        // console.log(exponent, totalSupply, totalSupplyMinted);
                     });
                 });
             });
         });
     });    
+
 
 
     // Load our presale contract settings
@@ -114,22 +118,36 @@ contract('rocketPoolPresale', function (accounts) {
             // presale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
                 // Get the contract details
-                return rocketPoolTokenInstance.getSaleContract.call(rocketPoolPresaleInstance.address).then(function(result) {
-                    var salesContract = result.valueOf();
-                    //console.log(salesContract);
-                    saleContracts.presale.targetEth = salesContract[0];
-                    saleContracts.presale.tokensLimit = salesContract[1];
-                    saleContracts.presale.fundingStartBlock = salesContract[2];
-                    saleContracts.presale.fundingEndBlock = salesContract[3];
-                    saleContracts.presale.contributionLimit = salesContract[4];
-                    saleContracts.presale.depositAddress = salesContract[5];
-                    //console.log(saleContracts.presale);
+                return rocketPoolTokenInstance.getSaleContractTargetEtherMin.call(rocketPoolPresaleInstance.address).then(function(result) {
+                    saleContracts.presale.targetEthMin = result.valueOf();
+                    return rocketPoolTokenInstance.getSaleContractTargetEtherMax.call(rocketPoolPresaleInstance.address).then(function(result) {
+                        saleContracts.presale.targetEthMax = result.valueOf();
+                        return rocketPoolTokenInstance.getSaleContractTokensLimit.call(rocketPoolPresaleInstance.address).then(function(result) {
+                            saleContracts.presale.tokensLimit = result.valueOf();
+                            return rocketPoolTokenInstance.getSaleContractStartBlock.call(rocketPoolPresaleInstance.address).then(function(result) {
+                                saleContracts.presale.fundingStartBlock = result.valueOf();
+                                return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolPresaleInstance.address).then(function(result) {
+                                    saleContracts.presale.fundingEndBlock = result.valueOf();
+                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolPresaleInstance.address).then(function(result) {
+                                        saleContracts.presale.contributionLimit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolPresaleInstance.address).then(function(result) {
+                                            saleContracts.presale.depositAddress = result.valueOf();
+                                            // Set the token price in ether now - maxTargetEth / tokensLimit
+                                            tokenPriceInEther = saleContracts.presale.targetEthMax / saleContracts.presale.tokensLimit;
+                                            return saleContracts.presale.depositAddress != 0 ? true : false;
+                                        }).then(function (result) {
+                                            assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
+                                        });  
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });
     });   
 
-    
 
     /*** Tests Start ***********************************/  
 
@@ -181,7 +199,7 @@ contract('rocketPoolPresale', function (accounts) {
                 // Contribute amount = 1 ether more than allowed
                 var sendAmount = web3.toWei('1', 'ether');
                 // Transaction
-                return rocketPoolPresaleInstance.sendTransaction({ from: userFourth, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolPresaleInstance.createTokens({ from: userFourth, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function(result) { 
                     assert(false, "Expect throw but didn't.");
@@ -194,27 +212,53 @@ contract('rocketPoolPresale', function (accounts) {
 
 
     // Just testing atm
-    it(printTitle('userFirst', 'fails to deposit'), function () {
+    it(printTitle('userFirst', 'deposits more ether than he\'s allocated, receives all his tokens and a refund'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // presale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
                 // Contribute amount = 1 ether more than allowed
                 var sendAmount = web3.toWei('5', 'ether');
-                // Transaction
-                return rocketPoolPresaleInstance.sendTransaction({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                    return false;
-                    return result;
-                }).then(function (result) {
-                    assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
-                });  
+                var userBalance = web3.eth.getBalance(userFirst).valueOf();
+                var contractBalance = web3.eth.getBalance(rocketPoolPresaleInstance.address).valueOf();
+                // Get the amount that's allocated to the presale user
+                return rocketPoolPresaleInstance.getPresaleAllocation.call(userFirst).then(function (result) {
+                    // Get the amount
+                    var presaleEtherAllocation = result.valueOf();
+                    // Transaction
+                    return rocketPoolPresaleInstance.createTokens({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                        // Setup our check vars
+                        var refund = 0;
+                        for(var i=0; i < result.logs.length; i++) {
+                            if(result.logs[i].event == 'Refund') {
+                                refund = result.logs[i].args._value.valueOf();
+                            }
+                        };
+                        //console.log(presaleEtherAllocation, refund, (sendAmount - presaleEtherAllocation));
+                        // Get the token balance of their account now after withdrawing
+                        return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                            // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
+                            var userFirstTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
+                            // The amount of expected tokens - use parseInt to avoid differences in minute rounding errors between js and solidity
+                            var expectedTokens = parseFloat(web3.fromWei(presaleEtherAllocation / tokenPriceInEther, 'ether')).toFixed(6);
+                            //console.log(refund);
+                            //console.log((sendAmount - presaleEtherAllocation));
+                            //console.log(userFirstTokens);
+                            //console.log(expectedTokens);
+                            // Make sure the refund is correct and the user has the correct amount of tokens
+                            return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens;
+                        }).then(function (result) {
+                            assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
+                        });
+                    }); 
+                });
             });
         });
     }); // End Test    
 
     return;
 
-
+    /*
     // Begin Tests
     it(printTitle('userFirst', 'fails to deposit before the presale begins'), function () {
         // Token contract   
@@ -256,7 +300,7 @@ contract('rocketPoolPresale', function (accounts) {
         });
     }); // End Test    
 
-
+    */
     
 
    

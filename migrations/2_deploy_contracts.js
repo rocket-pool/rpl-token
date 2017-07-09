@@ -18,6 +18,7 @@ var reserveFundDepositAddress = network == 'development' ? web3.eth.coinbase : s
 var presaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.presale.depositAddress;
 var crowdsaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.crowdsale.depositAddress;
 
+//console.log(salesContractsSettings.presale);
 
 // Deploy now
 module.exports = function(deployer) {
@@ -41,7 +42,8 @@ module.exports = function(deployer) {
                     rocketPoolTokenInstance.setSaleAgentContract(
                         rocketPoolReserveFund.address,
                         'reserveFund',
-                        salesContractsSettings.reserveFund.targetEth,
+                        salesContractsSettings.reserveFund.targetEthMax,
+                        salesContractsSettings.reserveFund.targetEthMin,
                         salesContractsSettings.reserveFund.tokensLimit,
                         salesContractsSettings.reserveFund.minDeposit,
                         salesContractsSettings.reserveFund.maxDeposit,
@@ -53,12 +55,12 @@ module.exports = function(deployer) {
                     );
                     console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - ReserveFund');
                     console.log(rocketPoolReserveFund.address);
-                    console.log("\n");
                     // Set the presale contract
                     rocketPoolTokenInstance.setSaleAgentContract(
                         rocketPoolPresale.address,
                         'presale',
-                        salesContractsSettings.presale.targetEth,
+                        salesContractsSettings.presale.targetEthMax,
+                        salesContractsSettings.presale.targetEthMin,
                         salesContractsSettings.presale.tokensLimit,
                         salesContractsSettings.presale.minDeposit,
                         salesContractsSettings.presale.maxDeposit,
@@ -70,12 +72,12 @@ module.exports = function(deployer) {
                     );
                     console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Presale');
                     console.log(rocketPoolPresale.address);
-                    console.log("\n");
                     // Set the crowdsale contract
                     rocketPoolTokenInstance.setSaleAgentContract(
                         rocketPoolCrowdsale.address,
                         'crowdsale',
-                        salesContractsSettings.crowdsale.targetEth,
+                        salesContractsSettings.crowdsale.targetEthMax,
+                        salesContractsSettings.crowdsale.targetEthMin,
                         salesContractsSettings.crowdsale.tokensLimit,
                         salesContractsSettings.crowdsale.minDeposit,
                         salesContractsSettings.crowdsale.maxDeposit,

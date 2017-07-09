@@ -71,8 +71,10 @@ contract('RocketPoolToken', function (accounts) {
     var saleContracts = {
         // Type of contract ie presale, crowdsale, quarterly 
         'reserveFund': {
-            // What the sale is aiming for 
-            targetEth: 0,
+            // The min amount to raise to consider the sale a success
+            targetEthMin: 0,
+            // The max amount the sale agent can raise
+            targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
             // Max ether allowed per account
@@ -101,7 +103,7 @@ contract('RocketPoolToken', function (accounts) {
                     // Set the total supply cap
                     return rocketPoolTokenInstance.totalSupplyCap.call().then(function(result) {
                         totalSupplyCap = result.valueOf();
-                        // console.log(exponent, totalSupply, totalSupplyMinted);
+                        // console.log(exponent, totalSupply, totalSupplyCap);
                     });
                 });
             });
@@ -112,6 +114,7 @@ contract('RocketPoolToken', function (accounts) {
   
 
     // Load our ReserveFund contract settings
+    /*
     it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
@@ -131,7 +134,7 @@ contract('RocketPoolToken', function (accounts) {
             });
         });
     });   
-
+    */
  
    
     // Begin Tests
@@ -144,7 +147,8 @@ contract('RocketPoolToken', function (accounts) {
                 return rocketPoolTokenInstance.setSaleAgentContract(
                     userFirst, 
                     'myowncontract',
-                    saleContracts.reserveFund.targetEth, 
+                    1,
+                    100,
                     saleContracts.reserveFund.tokensLimit, 
                     0,
                     100,

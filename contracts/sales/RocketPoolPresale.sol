@@ -4,9 +4,18 @@ import "../base/SalesAgent.sol";
 import "../lib/Arithmetic.sol";
 
 
-/// @title The main Rocket Pool Token (RPL) presale contract - mints new tokens instantly for reserved buyers once payment is made
+/// @title The main Rocket Pool Token (RPL) presale contract
 /// @author David Rugendyke - http://www.rocketpool.net
 
+/*****************************************************************
+*   This is the Rocket Pool presale sale agent contract. It mints
+*   tokens from the main erc20 token instantly when payment is made
+*   by a presale buyer. The value of each token is determined by
+*   the sale agent parameters maxTargetEth / tokensLimit. If a 
+*   buyer sends more ether than they are allocated, they receive
+*   their tokens + a refund. The sale ends when the end block
+*   is passed.
+/****************************************************************/
 
 contract RocketPoolPresale is SalesAgent  {
 
@@ -25,6 +34,15 @@ contract RocketPoolPresale is SalesAgent  {
     }
 
 
+    /**** Modifiers ***********/
+
+    /// @dev Only allow access from a presale user
+    modifier onlyPresaleUser(address _address) {
+        assert(allocations[_address].exists == true);
+        _;
+    }
+
+
     // Constructor
     /// @dev Sale Agent Init
     /// @param _tokenContractAddress The main token contract address
@@ -32,9 +50,9 @@ contract RocketPoolPresale is SalesAgent  {
         // Set the main token address
         tokenContractAddress = _tokenContractAddress;
         // The presale addresses and reserved amounts, if a presale user does not buy all their tokens, they roll into the public crowdsale which follows this one
-        // Note: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2]
-        addPresaleAllocation(0xbbb3c907236b94af11571fa418a2fe66f7bd0208, 2 ether);
-        addPresaleAllocation(0x6779f6d40f875fb08367d8ecf7f052ca4c71d286, 1 ether);
+        // NOTE: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2] if running the unit tests
+        addPresaleAllocation(0x63542866ff406cb5e3f6613b2441428b1078721f, 2 ether);
+        addPresaleAllocation(0xa94dcfc64993f8b259942ccadb8056dea3d6ac84, 1 ether);
     }
 
 
@@ -49,13 +67,17 @@ contract RocketPoolPresale is SalesAgent  {
         reservedAllocations.push(_address);
     }
 
+    /// @dev Get a presale users ether allocation
+    function getPresaleAllocation(address _address) public onlyPresaleUser(_address) returns(uint256) {
+        // Get the users assigned amount
+        return allocations[_address].amount;
+    }
+
 
     /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
-    function() payable external { 
+    function createTokens() payable public onlyPresaleUser(msg.sender) { 
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // First check they are part of the presale
-        assert(allocations[msg.sender].exists == true);
         // Do some common contribution validation, will throw if an error occurs
         if(rocketPoolToken.validateContribution(msg.sender, msg.value)) {
             // Have they already collected their reserved amount?
@@ -64,7 +86,7 @@ contract RocketPoolPresale is SalesAgent  {
             contributions[msg.sender] += msg.value;
             contributedTotal += msg.value;
             // Fire event
-            Contribute(msg.sender, msg.value); 
+            Contribute(this, msg.sender, msg.value); 
             // Mint the tokens now for that user instantly
             mintSendTokens();
         }
@@ -78,26 +100,35 @@ contract RocketPoolPresale is SalesAgent  {
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
         // If the user sent too much ether, calculate the refund
-        uint256 refundAmount = int256(contributions[msg.sender] - allocations[msg.sender].amount) > 0 ? contributions[msg.sender] - allocations[msg.sender].amount : 0;
-        FlagUint(contributions[msg.sender]);
-        FlagUint(allocations[msg.sender].amount);
-        FlagUint(refundAmount);
-        // Update their cointribution amount
-        contributions[msg.sender] -= refundAmount;
-        contributedTotal -= refundAmount;
+        uint256 refundAmount = int256(contributions[msg.sender] - allocations[msg.sender].amount) > 0 ? contributions[msg.sender] - allocations[msg.sender].amount : 0;    
         // Send the refund, throw if it doesn't succeed
-        // if (!msg.sender.send(refundAmount)) throw;
-        
+        if (refundAmount > 0) {
+            // Avoid recursion calls and deduct now
+            contributions[msg.sender] -= refundAmount;
+            contributedTotal -= refundAmount;
+            // Send the refund, throw if it doesn't succeed
+            if(!msg.sender.send(refundAmount)) throw;
+            // Fire event
+            Refund(this, msg.sender, refundAmount); 
+        } 
         // Max tokens allocated to this sale agent contract
         uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
-        // Calculate the price of each token using the target Eth and total tokens
-        uint256 tokenPrice = Arithmetic.overflowResistantFraction(rocketPoolToken.getSaleContractTargetEther(this), exponent, totalTokens);
+        // Note: There's a bug in testrpc currently which will deduct the msg.value twice from the user when calling any library function such as below (https://github.com/ethereumjs/testrpc/issues/122)
+        //       Testnet and mainnet work as expected
+        // Calculate the ether price of each token using the target max Eth and total tokens available for this agent, so tokenPrice = maxTargetEth / totalTokensForSale
+        uint256 tokenPrice = Arithmetic.overflowResistantFraction(rocketPoolToken.getSaleContractTargetEtherMax(this), exponent, totalTokens);
+        // Total tokens they will receive
+        //uint256 tokenAmountToMint = (contributions[msg.sender] / tokenPrice) * exponent;
+        uint256 tokenAmountToMint = Arithmetic.overflowResistantFraction(contributions[msg.sender], exponent, tokenPrice);
+        // Mint the tokens and give them to the user now
+        if(rocketPoolToken.mint(msg.sender, tokenAmountToMint)) {
 
-        FlagUint(refundAmount);
-        FlagUint(totalTokens);
+        }
+        
+        FlagUint(contributions[msg.sender]);
         FlagUint(tokenPrice);
-        // Calculate how many tokens to send
-        //uint256 tokenAmountToMint = 
+        FlagUint(tokenAmountToMint);
+         
     }
 
 
@@ -108,9 +139,9 @@ contract RocketPoolPresale is SalesAgent  {
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            // if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
+            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(this.balance)) throw;
             // Fire event
-            //FinaliseSale(msg.sender, targetEth);
+            FinaliseSale(this, msg.sender, this.balance);
         }
     }
 

@@ -23,7 +23,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
 
 
     /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
-    function() payable external { 
+    function createTokens() payable external { 
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
@@ -32,7 +32,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
             contributions[msg.sender] += msg.value;
             contributedTotal += msg.value;
             // Fire event
-            Contribute(msg.sender, msg.value); 
+            Contribute(this, msg.sender, msg.value); 
         }
     }
 
@@ -44,9 +44,9 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(rocketPoolToken.getSaleContractTargetEther(this))) throw;
+            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(rocketPoolToken.getSaleContractTargetEtherMin(this))) throw;
             // Fire event
-            FinaliseSale(msg.sender, targetEth);
+            FinaliseSale(this, msg.sender, targetEth);
         }
     }
 
@@ -57,7 +57,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
         // Set the target ether amount locally
-        uint256 targetEth = rocketPoolToken.getSaleContractTargetEther(this);
+        uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
         if(rocketPoolToken.validateClaimTokens(msg.sender)) {
             // The users contribution
@@ -69,7 +69,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 // Target wasn't met, refund the user
                 if (!msg.sender.send(userContributionTotal)) throw;
                 // Fire event
-                RefundContribution(msg.sender, userContributionTotal);
+                Refund(this, msg.sender, userContributionTotal);
             } else {
                 // Max tokens alloted to this sale agent contract
                 uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
@@ -80,7 +80,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 // Calculate the refund this user will receive
                 if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent))) throw;
                 // Fire event
-                ClaimTokens(msg.sender, rocketPoolToken.balanceOf(msg.sender));
+                ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
             }
         }
     }

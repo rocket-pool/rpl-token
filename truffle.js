@@ -19,8 +19,10 @@ module.exports = {
         salesContracts: {
             // Type of contract ie presale, crowdsale, quarterly 
             'reserveFund': {
-                // What the sale is aiming for 
-                targetEth: 0,
+                // The min amount to raise to consider the sale a success
+                targetEthMin: 0,
+                // The max amount the sale agent can raise
+                targetEthMax: 0,
                  // Maximum tokens the contract can distribute - this is our reserve fund
                 tokensLimit: units.convert('7500000', 'ether', 'wei'), // 7.5 million - 15%
                 // What the minimum deposit amount allowed
@@ -37,8 +39,10 @@ module.exports = {
                 depositAddress: 'testrpccoinbase'
             },
             'presale': {
-                // What the sale is aiming for - 5 Ether
-                targetEth: units.convert('5', 'ether', 'wei'),
+                // The min amount to raise to consider the sale a success
+                targetEthMin: 0,
+                // The max amount the sale agent can raise
+                targetEthMax: units.convert('4000', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
                 tokensLimit: units.convert('10625000', 'ether', 'wei'), // 10,625,000 - 25%
                 // What the minimum deposit amount allowed
@@ -55,8 +59,10 @@ module.exports = {
                 depositAddress: 'testrpccoinbase'
             },
             'crowdsale': {
-                // What the sale is aiming for - 5 Ether
-                targetEth: units.convert('5', 'ether', 'wei'),
+                // The min amount to raise to consider the sale a success
+                targetEthMin: units.convert('5', 'ether', 'wei'),
+                // The max amount the sale agent can raise
+                targetEthMax: units.convert('5000000', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
                 tokensLimit: units.convert('20000000', 'ether', 'wei'), // 20 million
                 // What the minimum deposit amount allowed

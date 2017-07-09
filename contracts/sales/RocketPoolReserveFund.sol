@@ -30,7 +30,7 @@ contract RocketPoolReserveFund is SalesAgent {
         // Finalise this sale, will verify the senders address, contribution amount and more - throws if basic finalisation settings are not met
         rocketPoolToken.setSaleContractFinalised(msg.sender);  
         // Fire the event
-        ClaimTokens(msg.sender, rocketPoolToken.balanceOf(msg.sender));
+        ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
     }
 
     

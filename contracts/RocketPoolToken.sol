@@ -7,6 +7,21 @@ import "./lib/Arithmetic.sol";
 /// @title The main Rocket Pool Token (RPL) contract
 /// @author David Rugendyke - http://www.rocketpool.net
 
+/*****************************************************************
+*   This is the main Rocket Pool Token (RPL) contract. It features
+*   Smart Agent compatibility. The Sale Agent is a new type of 
+*   contract that can authorise the minting of tokens on behalf of
+*   the traditional ERC20 token contract. This allows you to 
+*   distribute your ICO tokens through multiple Sale Agents, 
+*   at various times, of various token quantities and of varying
+*   fund targets. Once you’ve written a new Sale Agent contract,
+*   you can register him with the main ERC20 token contract, 
+*   he’s then permitted to sell it’s tokens on your behalf using
+*   guidelines such as the amount of tokens he’s allowed to sell, 
+*   the maximum ether he’s allowed to raise, the start block and
+*   end blocks he’s allowed to sell between and more.
+/****************************************************************/
+
 contract RocketPoolToken is StandardToken, Owned {
 
      /**** Properties ***********/
@@ -31,7 +46,8 @@ contract RocketPoolToken is StandardToken, Owned {
     struct salesAgent {                     // These are contract addresses that are authorised to mint tokens
         address saleContractAddress;        // Address of the contract
         bytes32 saleContractType;           // Type of the contract ie. presale, crowdsale 
-        uint256 targetEth;                  // The amount of ether to raise to consider this contracts sales completed
+        uint256 targetEthMax;               // The max amount of ether the agent is allowed raise
+        uint256 targetEthMin;               // The min amount of ether to raise to consider this contracts sales a success
         uint256 tokensLimit;                // The maximum amount of tokens this sale contract is allowed to distribute
         uint256 tokensMinted;               // The current amount of tokens minted by this agent
         uint256 minDeposit;                 // The minimum deposit amount allowed
@@ -89,7 +105,9 @@ contract RocketPoolToken is StandardToken, Owned {
         // Is it above the min deposit amount?
         assert(_value >= salesAgents[msg.sender].minDeposit); 
         // Is it below the max deposit allowed?
-        assert(_value <= salesAgents[msg.sender].maxDeposit);        
+        assert(_value <= salesAgents[msg.sender].maxDeposit);       
+        // Does this deposit put it over the max target ether for the sale contract?
+        assert(salesAgents[msg.sender].targetEthMax >= msg.sender.balance);       
         // Max sure the user has not exceeded their ether allocation - setting 0 means unlimited
         if(salesAgents[msg.sender].contributionLimit > 0) {
             // Get the users contribution so far
@@ -150,7 +168,8 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @dev Set the address of a new crowdsale/presale contract agent if needed, usefull for upgrading
     /// @param _saleAddress The address of the new token sale contract
     /// @param _saleContractType Type of the contract ie. presale, crowdsale, quarterly
-    /// @param _targetEth The amount of ether to raise to consider this contracts sales completed
+    /// @param _targetEthMax The max amount of ether the agent is allowed raise
+    /// @param _targetEthMin The min amount of ether to raise to consider this contracts sales a success
     /// @param _tokensLimit The maximum amount of tokens this sale contract is allowed to distribute
     /// @param _minDeposit The minimum deposit amount allowed
     /// @param _maxDeposit The maximum deposit amount allowed
@@ -161,7 +180,8 @@ contract RocketPoolToken is StandardToken, Owned {
     function setSaleAgentContract(
         address _saleAddress, 
          string _saleContractType, 
-        uint256 _targetEth, 
+        uint256 _targetEthMax, 
+        uint256 _targetEthMin, 
         uint256 _tokensLimit, 
         uint256 _minDeposit,
         uint256 _maxDeposit,
@@ -189,7 +209,8 @@ contract RocketPoolToken is StandardToken, Owned {
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       
                 saleContractType: sha3(_saleContractType),         
-                targetEth: _targetEth,   
+                targetEthMax: _targetEthMax,
+                targetEthMin: _targetEthMin,   
                 tokensLimit: _tokensLimit,  
                 tokensMinted: 0,
                 minDeposit: _minDeposit,
@@ -225,7 +246,7 @@ contract RocketPoolToken is StandardToken, Owned {
         // Not yet finished?
         assert(block.number >= salesAgents[msg.sender].endBlock);         
         // Not enough raised?
-        assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEth);
+        assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEthMin);
         // We're done now
         salesAgents[msg.sender].finalised = true;
         // All good
@@ -242,37 +263,28 @@ contract RocketPoolToken is StandardToken, Owned {
         salesAgents[msg.sender].depositAddressCheckedIn = true;
     }
 
-
-    /// @dev Fetch the main details of a crowdsale/presale contract
-    /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContract(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256, uint256, uint256, uint256, uint256, address)  {
-        // Return the sales contract struct as a tuple type
-        return(
-            salesAgents[_salesAgentAddress].targetEth,
-            salesAgents[_salesAgentAddress].tokensLimit,
-            salesAgents[_salesAgentAddress].startBlock,
-            salesAgents[_salesAgentAddress].endBlock,
-            salesAgents[_salesAgentAddress].contributionLimit,
-            salesAgents[_salesAgentAddress].depositAddress
-        ); 
-    }
-
     /// @dev Returns true if this sales contract has finalised
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractIsFinalised(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
-        return salesAgents[msg.sender].finalised;
+        return salesAgents[_salesAgentAddress].finalised;
     }
 
-    /// @dev Returns the target amount of ether the contract wants to raise
+    /// @dev Returns the min target amount of ether the contract wants to raise
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractTargetEther(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
-        return salesAgents[msg.sender].targetEth;
+    function getSaleContractTargetEtherMin(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].targetEthMin;
+    }
+
+    /// @dev Returns the max target amount of ether the contract can raise
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractTargetEtherMax(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].targetEthMax;
     }
 
     /// @dev Returns the address where the sale contracts ether will be deposited
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractDepositAddress(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(address)  {
-        return salesAgents[msg.sender].depositAddress;
+        return salesAgents[_salesAgentAddress].depositAddress;
     }
 
     /// @dev Returns the true if the sale agents deposit address has been verified
@@ -284,19 +296,25 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @dev Returns the start block for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractStartBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
-        return salesAgents[msg.sender].startBlock;
+        return salesAgents[_salesAgentAddress].startBlock;
     }
 
     /// @dev Returns the start block for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractEndBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
-        return salesAgents[msg.sender].endBlock;
+        return salesAgents[_salesAgentAddress].endBlock;
     }
 
     /// @dev Returns the max tokens for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractTokensLimit(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
-        return salesAgents[msg.sender].tokensLimit;
+        return salesAgents[_salesAgentAddress].tokensLimit;
+    }
+
+    /// @dev Returns the per account contribution limit for the sale agent
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractContributionLimit(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].contributionLimit;
     }
     
 }
