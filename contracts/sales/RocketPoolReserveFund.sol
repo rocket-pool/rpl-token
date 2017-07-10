@@ -7,6 +7,14 @@ import "../base/SalesAgent.sol";
 /// @author David Rugendyke - http://www.rocketpool.net
 
 
+/*****************************************************************
+*   This is the Rocket Pool reserve fund sale agent contract. It mints
+*   tokens from the main erc20 token instantly when claimReserveTokens
+*   is called. Tokens are assigned to the depositAddress for this
+*   sale agent. 15% of all tokens are reserved for RP future work.
+/****************************************************************/
+
+
 contract RocketPoolReserveFund is SalesAgent {
 
     // Constructor

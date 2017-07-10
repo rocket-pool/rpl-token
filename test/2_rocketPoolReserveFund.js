@@ -73,8 +73,10 @@ contract('RocketPoolReserveFund', function (accounts) {
     var saleContracts = {
         // Type of contract ie presale, crowdsale, quarterly 
         'reserveFund': {
-            // What the sale is aiming for 
-            targetEth: 0,
+            // The min amount to raise to consider the sale a success
+            targetEthMin: 0,
+            // The max amount the sale agent can raise
+            targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
             // Max ether allowed per account
@@ -109,22 +111,38 @@ contract('RocketPoolReserveFund', function (accounts) {
     });    
       
 
-    // Load our ReserveFund contract settings
-    it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
+    // Load our reserveFund contract settings
+    it(printTitle('contractreserveFund', 'load reserveFund contract settings'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Crowdsale contract   
+            // reserveFund contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Get the contract details
-                return rocketPoolTokenInstance.getSaleContract.call(rocketPoolReserveFund.address).then(function(result) {
-                    var salesContract = result.valueOf();
-                    //console.log(salesContract);
-                    saleContracts.reserveFund.targetEth = salesContract[0];
-                    saleContracts.reserveFund.tokensLimit = salesContract[1];
-                    saleContracts.reserveFund.fundingStartBlock = salesContract[2];
-                    saleContracts.reserveFund.fundingEndBlock = salesContract[3];
-                    saleContracts.reserveFund.contributionLimit = salesContract[4];
-                    saleContracts.reserveFund.depositAddress = salesContract[5];
+                return rocketPoolTokenInstance.getSaleContractTargetEtherMin.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                    saleContracts.reserveFund.targetEthMin = result.valueOf();
+                    return rocketPoolTokenInstance.getSaleContractTargetEtherMax.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                        saleContracts.reserveFund.targetEthMax = result.valueOf();
+                        return rocketPoolTokenInstance.getSaleContractTokensLimit.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                            saleContracts.reserveFund.tokensLimit = result.valueOf();
+                            return rocketPoolTokenInstance.getSaleContractStartBlock.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                saleContracts.reserveFund.fundingStartBlock = result.valueOf();
+                                return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                    saleContracts.reserveFund.fundingEndBlock = result.valueOf();
+                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                        saleContracts.reserveFund.contributionLimit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                            saleContracts.reserveFund.depositAddress = result.valueOf();
+                                            // Set the token price in ether now - maxTargetEth / tokensLimit
+                                            tokenPriceInEther = saleContracts.reserveFund.targetEthMax / saleContracts.reserveFund.tokensLimit;
+                                            return saleContracts.reserveFund.depositAddress != 0 ? true : false;
+                                        }).then(function (result) {
+                                            assert.isTrue(result, "rocketPoolReserveFundInstance depositAddress verified.");
+                                        });  
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });
@@ -133,13 +151,13 @@ contract('RocketPoolReserveFund', function (accounts) {
 
     /*** Tests Start ***********************************/    
 
-    it(printTitle('owner/depositAddress', 'fail to retrieve reserved tokens without verifying depositAddress with sale agent'), function () {
+    it(printTitle('depositAddress', 'fail to retrieve reserved tokens without verifying depositAddress with sale agent'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Get the contract details
-                return rocketPoolReserveFundInstance.claimReserveTokens({ from: owner, gas: 250000 }).then(function (result) {
+                return rocketPoolReserveFundInstance.claimReserveTokens({ from: saleContracts.reserveFund.depositAddress, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function(result) { 
                     assert(false, "Expect throw but didn't.");
@@ -151,13 +169,13 @@ contract('RocketPoolReserveFund', function (accounts) {
     });
 
 
-    it(printTitle('owner/depositAddress', 'verify depositAddress with sale agent'), function () {
+    it(printTitle('depositAddress', 'verify depositAddress with sale agent'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Get the contract details
-                return rocketPoolReserveFundInstance.setDepositAddressVerify({ from: owner, gas: 250000 }).then(function (result) {
+                return rocketPoolReserveFundInstance.setDepositAddressVerify({ from: saleContracts.reserveFund.depositAddress, gas: 250000 }).then(function (result) {
                     // Token contract, verify our reservefund contract has been verified   
                     return rocketPoolTokenInstance.getSaleContractDepositAddressVerified.call(rocketPoolReserveFundInstance.address, { from: owner }).then(function (result) {
                         var verified = result.valueOf();
@@ -189,15 +207,15 @@ contract('RocketPoolReserveFund', function (accounts) {
     }); 
 
  
-    it(printTitle('owner/depositAddress', 'retrieve reserved tokens from reserveFund sale agent'), function () {
+    it(printTitle('depositAddress', 'retrieve reserved tokens from reserveFund sale agent'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Get the contract details
-                return rocketPoolReserveFundInstance.claimReserveTokens({ from: owner, gas: 250000 }).then(function (result) {
+                return rocketPoolReserveFundInstance.claimReserveTokens({ from: saleContracts.reserveFund.depositAddress, gas: 250000 }).then(function (result) {
                     // Token contract   
-                    return rocketPoolTokenInstance.balanceOf.call(owner).then(function (result) {
+                    return rocketPoolTokenInstance.balanceOf.call(saleContracts.reserveFund.depositAddress).then(function (result) {
                         // Get our token balance now
                         var tokenBalance = parseFloat(result.valueOf());
                         // Get the total supply cap
@@ -205,10 +223,18 @@ contract('RocketPoolReserveFund', function (accounts) {
                             totalSupplyCap = parseFloat(result.valueOf());
                             // Get the total supply minted
                             return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
-                                totalSupply = parseFloat(result.valueOf());
-                                return tokenBalance == saleContracts.reserveFund.tokensLimit && totalSupply == tokenBalance ? true : false;
-                            }).then(function (result) {
-                                assert.isTrue(result, "Tokens sent to depositAddress.");
+                                totalSupply = Number(result.valueOf());
+                                // Get the total tokens minted according to the sale agent
+                                return rocketPoolTokenInstance.getSaleContractTokensMinted.call(rocketPoolReserveFundInstance.address).then(function (result) {
+                                    // Total minted by sale agent
+                                    var totalMintedSaleAgent = Number(result.valueOf());
+                                    return  tokenBalance == saleContracts.reserveFund.tokensLimit &&
+                                            totalSupply == tokenBalance &&
+                                            totalMintedSaleAgent == tokenBalance
+                                        ? true : false;
+                                }).then(function (result) {
+                                    assert.isTrue(result, "Tokens sent to depositAddress.");
+                                });
                             });
                         });
                     });

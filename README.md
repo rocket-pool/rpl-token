@@ -14,7 +14,7 @@ This repo is for the Rocket Pool crowdsale. The current main Rocket Pool repo is
 
 # Rocket Pool White Paper
 
-You can read the current Rocket Pool white paper here: [http://www.rocketpool.net/files/RocketPoolWhitePaperV0.2.pdf](http://www.rocketpool.net/files/RocketPoolWhitePaperV0.2.pdf).
+You can read the current Rocket Pool white paper here: [http://www.rocketpool.net/files/RocketPoolWhitePaper.pdf](http://www.rocketpool.net/files/RocketPoolWhitePaper.pdf).
 
 
 # More Information and Contact
