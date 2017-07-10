@@ -311,6 +311,12 @@ contract RocketPoolToken is StandardToken, Owned {
         return salesAgents[_salesAgentAddress].tokensLimit;
     }
 
+    /// @dev Returns the token total currently minted by the sale agent
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractTokensMinted(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].tokensMinted;
+    }
+
     /// @dev Returns the per account contribution limit for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractContributionLimit(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
