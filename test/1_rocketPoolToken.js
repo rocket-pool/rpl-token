@@ -111,34 +111,45 @@ contract('RocketPoolToken', function (accounts) {
     }); 
 
 
-  
-
-    // Load our ReserveFund contract settings
-    /*
-    it(printTitle('contractReserveFund', 'load reserveFund contract settings'), function () {
+    // Load our reserveFund contract settings
+    it(printTitle('contractreserveFund', 'load reserveFund contract settings'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Crowdsale contract   
+            // reserveFund contract   
             return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
                 // Get the contract details
-                return rocketPoolTokenInstance.getSaleContract.call(rocketPoolReserveFund.address).then(function(result) {
-                    var salesContract = result.valueOf();
-                    //console.log(salesContract);
-                    saleContracts.reserveFund.targetEth = salesContract[0];
-                    saleContracts.reserveFund.tokensLimit = salesContract[1];
-                    saleContracts.reserveFund.fundingStartBlock = salesContract[2];
-                    saleContracts.reserveFund.fundingEndBlock = salesContract[3];
-                    saleContracts.reserveFund.contributionLimit = salesContract[4];
-                    saleContracts.reserveFund.depositAddress = salesContract[5];
+                return rocketPoolTokenInstance.getSaleContractTargetEtherMin.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                    saleContracts.reserveFund.targetEthMin = result.valueOf();
+                    return rocketPoolTokenInstance.getSaleContractTargetEtherMax.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                        saleContracts.reserveFund.targetEthMax = result.valueOf();
+                        return rocketPoolTokenInstance.getSaleContractTokensLimit.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                            saleContracts.reserveFund.tokensLimit = result.valueOf();
+                            return rocketPoolTokenInstance.getSaleContractStartBlock.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                saleContracts.reserveFund.fundingStartBlock = result.valueOf();
+                                return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                    saleContracts.reserveFund.fundingEndBlock = result.valueOf();
+                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                        saleContracts.reserveFund.contributionLimit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                            saleContracts.reserveFund.depositAddress = result.valueOf();
+                                            // Set the token price in ether now - maxTargetEth / tokensLimit
+                                            tokenPriceInEther = saleContracts.reserveFund.targetEthMax / saleContracts.reserveFund.tokensLimit;
+                                            return saleContracts.reserveFund.depositAddress != 0 ? true : false;
+                                        }).then(function (result) {
+                                            assert.isTrue(result, "rocketPoolReserveFundInstance depositAddress verified.");
+                                        });  
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
             });
         });
-    });   
-    */
- 
+    }); 
    
     // Begin Tests
-    it(printTitle('userFirst', 'fails to register crowdsale contract as they are not the owner'), function () {
+    it(printTitle('userFirst', 'fails to register crowdsale contract as they are not the owner of the token contract'), function () {
         // Contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Contract   

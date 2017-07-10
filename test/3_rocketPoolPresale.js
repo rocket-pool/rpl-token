@@ -440,11 +440,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Check to see its actually finalised
                     return rocketPoolTokenInstance.getSaleContractIsFinalised.call(rocketPoolPresaleInstance.address).then(function (result) {
                         var isFinalised = result.valueOf();
-                        //console.log(isFinalised);
-                        //console.log(depositAddressAccountBefore);
-                        //console.log(depositAddressAccountAfter);
-                        //console.log(saleAgentAccountBefore);
-                        //console.log(saleAgentAccountAfter);
+                        // Check it all now
                         return isFinalised == true && saleAgentAccountAfter == 0 && depositAddressAccountAfter > depositAddressAccountBefore;
                     }).then(function (result) {
                         assert.isTrue(result, "token counts are correct.");
@@ -455,27 +451,48 @@ contract('rocketPoolPresale', function (accounts) {
     });   
 
 
-    it(printTitle('userThird', 'fails to deposit and collect their reserved tokens as the sale has been finalised'), function () {
+    it(printTitle('userFirst', 'sends 10 tokens to userSecond successfully'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // presale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
-                 // Get the amount that's allocated to the presale user
-                return rocketPoolPresaleInstance.getPresaleAllocation.call(userThird).then(function (result) {
-                    // Send the amount we've been allocated
-                    var sendAmount = result.valueOf();
-                    // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userThird, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                        return result;
-                    }).then(function(result) { 
-                        assert(false, "Expect throw but didn't.");
-                    }).catch(function (error) {
-                        return checkThrow(error);
+                // Get the token balance of their account
+                return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                    // userFirst
+                    var userFirstTokenBalance = Number(result.valueOf());
+                    // Get the token balance of their account
+                    return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                        // userSecond
+                        var userSecondTokenBalance = Number(result.valueOf());
+                        // 10 Tokens
+                        var tokenAmount = Number(web3.toWei(10, 'ether'));
+                        // Transfer 10 tokens to second user now
+                        return rocketPoolTokenInstance.transfer(userSecond, tokenAmount, { from: userFirst, to: rocketPoolPresaleInstance.address, gas: 150000 }).then(function (result) {
+                            // Get the token balance of their account
+                            return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                                // userFirst after
+                                var userFirstTokenBalanceAfter = Number(result.valueOf());
+                                // Get the token balance of their account
+                                return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                                    // userSecond after
+                                    var userSecondTokenBalanceAfter = Number(result.valueOf());
+                                    // Ok check the balances are correct now  
+                                    return  userFirstTokenBalanceAfter == (userFirstTokenBalance - tokenAmount) &&
+                                            userSecondTokenBalanceAfter == (userSecondTokenBalance + tokenAmount)
+                                         ? true : false;
+                                }).then(function (result) {
+                                    assert.isTrue(result, "userSecond receives correct amount of tokens.");
+                                });
+                            });
+                        });
                     });
-                });
+                });                    
             });
         });
     }); // End Test  
+
+
+
     
 
    

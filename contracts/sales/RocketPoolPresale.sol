@@ -51,9 +51,9 @@ contract RocketPoolPresale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
         // The presale addresses and reserved amounts, if a presale user does not buy all their tokens, they roll into the public crowdsale which follows this one
         // NOTE: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2], accounts[3] if running the unit tests
-        addPresaleAllocation(0x6fada1e5111018f7752a9aca440d5533738a9922, 2 ether);
-        addPresaleAllocation(0x05ce82a8f40c55ef890d2d78b82c2841a89ba209, 1 ether);
-        addPresaleAllocation(0x1e109be22999afd866018f72813d1e896bd7720c, 0.5 ether);
+        addPresaleAllocation(0x9e3d39f37dbab7958ebed166a05a7a7f284f037b, 2 ether);
+        addPresaleAllocation(0x171e087a4a3a6e308cbabd010636b4fdbd15b5fe, 1 ether);
+        addPresaleAllocation(0xf3bbd7e47420b37f298fe527dc05312e4b83d134, 0.5 ether);
     }
 
 
