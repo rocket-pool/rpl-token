@@ -177,7 +177,7 @@ contract('rocketPoolPresale', function (accounts) {
             // Crowdsale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
                 // Get the contract details
-                return rocketPoolPresaleInstance.setDepositAddressVerify({ from: owner, gas: 250000 }).then(function (result) {
+                return rocketPoolPresaleInstance.setDepositAddressVerify({ from: saleContracts.crowdsale.depositAddress, gas: 250000 }).then(function (result) {
                     // Token contract, verify our reservefund contract has been verified   
                     return rocketPoolTokenInstance.getSaleContractDepositAddressVerified.call(rocketPoolPresaleInstance.address, { from: saleContracts.presale.depositAddress }).then(function (result) {
                         var verified = result.valueOf();

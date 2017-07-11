@@ -7,6 +7,16 @@ import "../lib/Arithmetic.sol";
 /// @title The main Rocket Pool Token (RPL) crowdsale contract
 /// @author David Rugendyke - http://www.rocketpool.net
 
+/*****************************************************************
+*   This is the Rocket Pool crowdsale sale agent contract. It allows
+*   deposits from the public for RPL tokens. Tokens are distributed
+*   when the end date for the sale passes and uses collect their
+*   tokens + any refund applicable. Tokens are distributed in a
+*   proportional method that avoids the ‘rush’ associated with current
+*   ICOs by allocating tokens based on the amount of ether deposited over time,
+*   rather than selling to whomever gets there first.
+/****************************************************************/
+
  // Tokens allocated proportionately to each sender according to amount of ETH contributed as a fraction of the total amount of ETH contributed by all senders.
  // credit for original distribution idea goes to hiddentao - https://github.com/hiddentao/ethereum-token-sales
 

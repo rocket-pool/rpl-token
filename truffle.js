@@ -24,7 +24,7 @@ module.exports = {
                 // The max amount the sale agent can raise
                 targetEthMax: 0,
                  // Maximum tokens the contract can distribute - this is our reserve fund
-                tokensLimit: units.convert('7500000', 'ether', 'wei'), // 7.5 million - 15%
+                tokensLimit: units.convert('7500000', 'ether', 'wei'), // 7,500,000 - 15%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
@@ -44,7 +44,7 @@ module.exports = {
                 // The max amount the sale agent can raise
                 targetEthMax: units.convert('4000', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('10625000', 'ether', 'wei'), // 10,625,000 - 25%
+                tokensLimit: units.convert('12500000', 'ether', 'wei'), // 12,500,000 - 25%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
@@ -60,19 +60,19 @@ module.exports = {
             },
             'crowdsale': {
                 // The min amount to raise to consider the sale a success
-                targetEthMin: units.convert('5', 'ether', 'wei'),
+                targetEthMin: units.convert('5', 'ether', 'wei'), // 5,000
                 // The max amount the sale agent can raise
-                targetEthMax: units.convert('5000000', 'ether', 'wei'),
+                targetEthMax: units.convert('10000', 'ether', 'wei'), // 10,000
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('20000000', 'ether', 'wei'), // 20 million
+                tokensLimit: units.convert('30000000', 'ether', 'wei'), // 30,000,000 - 60%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
                 maxDeposit: units.convert('4', 'ether', 'wei'),
                 // Start block
-                fundingStartBlock: 8,
+                fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 57,
+                fundingEndBlock: 4557,
                 // Max ether allowed per account 2 Ether
                 contributionLimit: units.convert('3', 'ether', 'wei'),
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
