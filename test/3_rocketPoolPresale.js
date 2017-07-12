@@ -177,7 +177,7 @@ contract('rocketPoolPresale', function (accounts) {
             // Crowdsale contract   
             return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
                 // Get the contract details
-                return rocketPoolPresaleInstance.setDepositAddressVerify({ from: saleContracts.crowdsale.depositAddress, gas: 250000 }).then(function (result) {
+                return rocketPoolPresaleInstance.setDepositAddressVerify({ from: saleContracts.presale.depositAddress, gas: 250000 }).then(function (result) {
                     // Token contract, verify our reservefund contract has been verified   
                     return rocketPoolTokenInstance.getSaleContractDepositAddressVerified.call(rocketPoolPresaleInstance.address, { from: saleContracts.presale.depositAddress }).then(function (result) {
                         var verified = result.valueOf();
@@ -476,9 +476,11 @@ contract('rocketPoolPresale', function (accounts) {
                                 return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
                                     // userSecond after
                                     var userSecondTokenBalanceAfter = Number(result.valueOf());
-                                    // Ok check the balances are correct now  
-                                    return  userFirstTokenBalanceAfter == (userFirstTokenBalance - tokenAmount) &&
-                                            userSecondTokenBalanceAfter == (userSecondTokenBalance + tokenAmount)
+                                    // Format it
+                                    tokenAmount = Math.round(web3.fromWei(tokenAmount, 'ether'));        
+                                    // Ok check the balances are correct now - use round to avoid minute floating point rounding issues when adding/subtracting in js
+                                    return  Math.round(web3.fromWei(userFirstTokenBalanceAfter, 'ether')) == (Math.round(web3.fromWei(userFirstTokenBalance, 'ether')) - tokenAmount) &&
+                                            Math.round(web3.fromWei(userSecondTokenBalanceAfter, 'ether')) == (Math.round(web3.fromWei(userSecondTokenBalance, 'ether')) + tokenAmount)
                                          ? true : false;
                                 }).then(function (result) {
                                     assert.isTrue(result, "userSecond receives correct amount of tokens.");

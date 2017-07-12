@@ -18,7 +18,6 @@ var reserveFundDepositAddress = network == 'development' ? web3.eth.coinbase : s
 var presaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.presale.depositAddress;
 var crowdsaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.crowdsale.depositAddress;
 
-//console.log(salesContractsSettings.presale);
 
 // Deploy now
 module.exports = function(deployer) {

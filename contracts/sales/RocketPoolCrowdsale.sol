@@ -51,10 +51,12 @@ contract RocketPoolCrowdsale is SalesAgent  {
     function finaliseFunding() external {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // Set the target ether amount locally
+        uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(rocketPoolToken.getSaleContractTargetEtherMin(this))) throw;
+            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
             // Fire event
             FinaliseSale(this, msg.sender, targetEth);
         }
@@ -69,6 +71,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Set the target ether amount locally
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
+        // Checks to see if this user has actually contributed anything and if the sale end block has passed
         if(rocketPoolToken.validateClaimTokens(msg.sender)) {
             // The users contribution
             uint256 userContributionTotal = contributions[msg.sender];
@@ -85,12 +88,18 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
                 // Calculate what percent of the ether raised came from me
                 uint256 percEtherContributed = Arithmetic.overflowResistantFraction(userContributionTotal, exponent, contributedTotal);
-                // Calculate how many tokens I get, don't include the reserve left for RP
+                // Calculate how many tokens the user gets
                 rocketPoolToken.mint(msg.sender, Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
                 // Calculate the refund this user will receive
                 if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent))) throw;
                 // Fire event
                 ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
+
+                /*
+                FlagUint(totalTokens);
+                FlagUint(percEtherContributed);
+                FlagUint(Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
+                */
             }
         }
     }

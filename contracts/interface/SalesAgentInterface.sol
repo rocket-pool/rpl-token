@@ -8,8 +8,6 @@ contract SalesAgentInterface {
      /**** Properties ***********/
     // Main contract token address
     address tokenContractAddress;
-    // The target amount of ether to raise for this sales contract
-    uint256 targetEth;
     // Contributions per address
     mapping (address => uint256) public contributions;    
     // Total ETH contributed     

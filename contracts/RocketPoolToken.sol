@@ -89,7 +89,7 @@ contract RocketPoolToken is StandardToken, Owned {
 
     // @dev General validation for a sales agent contract receiving a contribution, additional validation can be done in the sale contract if required
     // @param _sender The address sent the contribution
-    // @param _value The value of the contribution
+    // @param _value The value of the contribution in wei
     // @return A boolean that indicates if the operation was successful.
     function validateContribution(address _sender, uint256 _value) isSalesContract(msg.sender) returns (bool) {
         // Get an instance of the sale agent contract
@@ -107,7 +107,7 @@ contract RocketPoolToken is StandardToken, Owned {
         // Is it below the max deposit allowed?
         assert(_value <= salesAgents[msg.sender].maxDeposit);       
         // Does this deposit put it over the max target ether for the sale contract?
-        assert(salesAgents[msg.sender].targetEthMax >= msg.sender.balance);       
+        assert((saleAgent.contributedTotal() + _value) <= salesAgents[msg.sender].targetEthMax);       
         // Max sure the user has not exceeded their ether allocation - setting 0 means unlimited
         if(salesAgents[msg.sender].contributionLimit > 0) {
             // Get the users contribution so far
@@ -139,9 +139,8 @@ contract RocketPoolToken is StandardToken, Owned {
     // @return A boolean that indicates if the operation was successful.
     function mint(address _to, uint _amount) isSalesContract(msg.sender) returns (bool) {
         // Check if we're ok to mint new tokens, have we started?
-        assert(block.number >= salesAgents[msg.sender].startBlock);       
-        // Has the sale period finished? If the end block is set to 0, the sale continues until the sale agents supply runs out or its finalised
-        assert((block.number <= salesAgents[msg.sender].endBlock) || salesAgents[msg.sender].endBlock == 0); 
+        // We dont check for the end block as some sale agents mint tokens during the sale, and some after its finished (proportional sales)
+        assert(block.number > salesAgents[msg.sender].startBlock);   
         // Check the depositAddress has been verified by the designated account holder that will receive the funds from that agent
         assert(salesAgents[msg.sender].depositAddressCheckedIn == true);
         // No minting if the sale contract has finalised
