@@ -204,6 +204,10 @@ contract RocketPoolToken is StandardToken, Owned {
             assert(_tokensLimit > 0 && totalSupplyCap >= (currentAvailableTokens + _tokensLimit));
             // Make sure the min deposit is less than or equal to the max
             assert(_minDeposit <= _maxDeposit);
+            // Make sure the supplied contribution limit is not more than the targetEthMax - 0 means unlimited
+            if(_contributionLimit > 0) {
+                assert(_contributionLimit <= _targetEthMax);
+            }
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       

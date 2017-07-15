@@ -72,9 +72,9 @@ module.exports = {
                 // What is the maximum deposit size allowed
                 maxDeposit: units.convert('4', 'ether', 'wei'),
                 // Start block
-                fundingStartBlock: 12,
+                fundingStartBlock: 15,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 23,
+                fundingEndBlock: 26,
                 // Max ether allowed per account 2 Ether
                 contributionLimit: units.convert('3', 'ether', 'wei'),
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here

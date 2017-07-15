@@ -1,3 +1,5 @@
+// NOTE: Before running, this script requires that testrpc be restarted so that the start block and end blocks required match up for the unit test
+
 // Load contracts
 var rocketPoolToken = artifacts.require("./contract/RocketPoolToken.sol");
 var rocketPoolCrowdsale = artifacts.require("./contract/RocketPoolCrowdsale.sol");
@@ -351,6 +353,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
+                //console.log(web3.eth.getBalance(rocketPoolCrowdsaleInstance.address).valueOf());
                 // Contribute amount
                 var sendAmount = web3.toWei('1.33333945012327895', 'ether');
                 // Transaction
@@ -423,6 +426,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
         });
     }); // End Test   
 
+    
 
      // ******* Crowdsale hits end block, closes **************
 
