@@ -149,7 +149,7 @@ contract('RocketPoolToken', function (accounts) {
     }); 
    
     // Begin Tests
-    it(printTitle('userFirst', 'fails to register crowdsale contract as they are not the owner of the token contract'), function () {
+    it(printTitle('userFirst', 'fails to register new sale agent contract as they are not the owner of the token contract'), function () {
         // Contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Contract   

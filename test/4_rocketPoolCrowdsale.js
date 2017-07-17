@@ -135,8 +135,20 @@ contract('rocketPoolCrowdsale', function (accounts) {
                                         saleContracts.crowdsale.contributionLimit = result.valueOf();
                                         return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
                                             saleContracts.crowdsale.depositAddress = result.valueOf();
-                                            // Set the token price in ether now - maxTargetEth / tokensLimit
-                                            tokenPriceInEther = saleContracts.crowdsale.targetEthMax / saleContracts.crowdsale.tokensLimit;
+                                            // Set the token price in ether now - minTargetEth / tokensLimit
+                                            tokenPriceInEther = saleContracts.crowdsale.targetEthMin / saleContracts.crowdsale.tokensLimit;
+                                            // Log it
+                                            console.log("\n");
+                                            console.log(printTitle('Sale Agent Details', '--------------------------'));
+                                            console.log("\n");
+                                            console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.crowdsale.targetEthMin, 'ether')));
+                                            console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.crowdsale.targetEthMax, 'ether')));
+                                            console.log(printTitle(' Start Block', saleContracts.crowdsale.fundingStartBlock));
+                                            console.log(printTitle(' End Block', saleContracts.crowdsale.fundingEndBlock));
+                                            console.log(printTitle(' Contribution Limit', saleContracts.crowdsale.contributionLimit));
+                                            console.log(printTitle(' Deposit Address', saleContracts.crowdsale.depositAddress));
+                                            console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
+                                            console.log("\n");
                                             return saleContracts.crowdsale.depositAddress != 0 ? true : false;
                                         }).then(function (result) {
                                             assert.isTrue(result, "rocketPoolCrowdsaleInstance depositAddress verified.");
@@ -150,6 +162,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
             });
         });
     }); 
+    
 
     
 
@@ -521,7 +534,6 @@ contract('rocketPoolCrowdsale', function (accounts) {
                                     assert.isTrue(result, "Withdrawn tokens and refund.");
                                 });
                             });
-                            return false;
                         });
                     });
                 });
@@ -683,7 +695,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test 
 
 
-    it(printTitle('tokenContract', 'should have distrubuted tokens to the users and have just the token reserve remaining'), function () {
+    it(printTitle('tokenContract', 'should have distrubuted tokens to the users'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
@@ -746,7 +758,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test 
 
 
-    it(printTitle('depositAddress', 'finalises the crowdsale and receives the ether + reserved tokens'), function () {
+    it(printTitle('depositAddress', 'finalises the crowdsale and receives the ether'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   

@@ -134,6 +134,18 @@ contract('rocketPoolPresale', function (accounts) {
                                             saleContracts.presale.depositAddress = result.valueOf();
                                             // Set the token price in ether now - maxTargetEth / tokensLimit
                                             tokenPriceInEther = saleContracts.presale.targetEthMax / saleContracts.presale.tokensLimit;
+                                            // Log it
+                                            console.log("\n");
+                                            console.log(printTitle('Sale Agent Details', '--------------------------'));
+                                            console.log("\n");
+                                            console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.presale.targetEthMin, 'ether')));
+                                            console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.presale.targetEthMax, 'ether')));
+                                            console.log(printTitle(' Start Block', saleContracts.presale.fundingStartBlock));
+                                            console.log(printTitle(' End Block', saleContracts.presale.fundingEndBlock));
+                                            console.log(printTitle(' Contribution Limit', saleContracts.presale.contributionLimit));
+                                            console.log(printTitle(' Deposit Address', saleContracts.presale.depositAddress));
+                                            console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
+                                            console.log("\n");
                                             return saleContracts.presale.depositAddress != 0 ? true : false;
                                         }).then(function (result) {
                                             assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
