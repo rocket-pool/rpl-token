@@ -196,20 +196,23 @@ contract RocketPoolToken is StandardToken, Owned {
     // Only the owner can register a new sale agent
     public onlyOwner  
     {
-        if(_saleAddress != 0x0 && _depositAddress != 0x0) {
+        if(_saleAddress != 0x0 && _depositAddress != 0x0) {           
+           
+
+            /* Note: If a sale finishes but doesn't meet it's target, further sale agents cant be registered to sell all the tokens if these lines are in 
             // Count all the tokens currently available through our agents
             uint256 currentAvailableTokens = 0;
             for(uint256 i=0; i < salesAgentsAddresses.length; i++) {
                currentAvailableTokens += salesAgents[salesAgentsAddresses[i]].tokensLimit;
             }
-           
-            // Must have some available tokens
-            assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
             // If tokensLimit is set to 0, it means assign the rest of the available tokens
             // _tokensLimit = _tokensLimit <= 0 ? totalSupplyCap - currentAvailableTokens : _tokensLimit;
             // Can we cover this lot of tokens for the agent if they are all minted?
-            // Note: If a sale finishes but doesn't meet it's target, further sale agents cant be registered to sell all the tokens if this line is in
             // assert(_tokensLimit > 0 && totalSupplyCap >= (currentAvailableTokens + _tokensLimit));
+            *****/
+
+             // Must have some available tokens
+            assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
             // Make sure the min deposit is less than or equal to the max
             assert(_minDeposit <= _maxDeposit);
             // Make sure the supplied contribution limit is not more than the targetEthMax - 0 means unlimited

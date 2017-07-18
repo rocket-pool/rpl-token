@@ -51,9 +51,9 @@ contract RocketPoolPresale is SalesAgent  {
         tokenContractAddress = _tokenContractAddress;
         // The presale addresses and reserved amounts, if a presale user does not buy all their tokens, they roll into the public crowdsale which follows this one
         // NOTE: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2], accounts[3] if running the unit tests
-        addPresaleAllocation(0x7a7ba7e66aaf422ecd8823366fbf9b80a1e6b7cf, 2 ether);
-        addPresaleAllocation(0x99bd79722fe852ad1cfb5b506fedc84237d1e9ea, 1 ether);
-        addPresaleAllocation(0xcda6fad8c86a49d4782db732dc5cfa9de1207585, 0.5 ether);
+        addPresaleAllocation(0xbcf22807b0573d6d08dbd8aea897af41f77e9054, 2 ether);
+        addPresaleAllocation(0x5a7edcb19967632cf69dbbab70b068214b2c9d1e, 1 ether);
+        addPresaleAllocation(0x33b6e05cbbeef36a94d0858273accc97f67155b3, 0.5 ether);
     }
 
 
@@ -103,7 +103,7 @@ contract RocketPoolPresale is SalesAgent  {
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
         // If the user sent too much ether, calculate the refund
-        uint256 refundAmount = int256(contributions[msg.sender] - allocations[msg.sender].amount) > 0 ? contributions[msg.sender] - allocations[msg.sender].amount : 0;    
+        uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? contributions[msg.sender] - allocations[msg.sender].amount : 0;    
         // Send the refund, throw if it doesn't succeed
         if (refundAmount > 0) {
             // Avoid recursion calls and deduct now
@@ -123,15 +123,7 @@ contract RocketPoolPresale is SalesAgent  {
         // Total tokens they will receive
         uint256 tokenAmountToMint = Arithmetic.overflowResistantFraction(allocations[msg.sender].amount, exponent, tokenPrice);
         // Mint the tokens and give them to the user now
-        rocketPoolToken.mint(msg.sender, tokenAmountToMint);
-        
-        /*
-        FlagUint(refundAmount);
-        FlagUint(contributions[msg.sender]);
-        FlagUint(tokenPrice);
-        FlagUint(tokenAmountToMint);
-        */
-         
+        rocketPoolToken.mint(msg.sender, tokenAmountToMint);         
     }
 
 

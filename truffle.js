@@ -10,11 +10,6 @@ module.exports = {
         host: "localhost",
         port: 8545,
         network_id: "*", // Match any network id,
-        // The token parameters  
-        token: {
-            // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-            depositAddress: 0,
-        },  
         // The sale contracts
         salesContracts: {
             // This is the reserve fund contract, simply distributes the reserved coins to the depositAddress
@@ -82,6 +77,5 @@ module.exports = {
             }
         }  
       },
-    
   }
 };
