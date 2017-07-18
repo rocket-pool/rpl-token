@@ -163,12 +163,16 @@ contract RocketPoolToken is StandardToken, Owned {
         return true; 
     }
 
+    /// @dev Returns the amount of tokens that can still be minted
+    function getRemainingTokens()  public returns(uint256)  {
+        return totalSupplyCap - totalSupply;
+    }
     
     /// @dev Set the address of a new crowdsale/presale contract agent if needed, usefull for upgrading
     /// @param _saleAddress The address of the new token sale contract
     /// @param _saleContractType Type of the contract ie. presale, crowdsale, quarterly
-    /// @param _targetEthMax The max amount of ether the agent is allowed raise
     /// @param _targetEthMin The min amount of ether to raise to consider this contracts sales a success
+    /// @param _targetEthMax The max amount of ether the agent is allowed raise
     /// @param _tokensLimit The maximum amount of tokens this sale contract is allowed to distribute
     /// @param _minDeposit The minimum deposit amount allowed
     /// @param _maxDeposit The maximum deposit amount allowed
@@ -179,8 +183,8 @@ contract RocketPoolToken is StandardToken, Owned {
     function setSaleAgentContract(
         address _saleAddress, 
          string _saleContractType, 
-        uint256 _targetEthMax, 
         uint256 _targetEthMin, 
+        uint256 _targetEthMax, 
         uint256 _tokensLimit, 
         uint256 _minDeposit,
         uint256 _maxDeposit,
@@ -198,10 +202,14 @@ contract RocketPoolToken is StandardToken, Owned {
             for(uint256 i=0; i < salesAgentsAddresses.length; i++) {
                currentAvailableTokens += salesAgents[salesAgentsAddresses[i]].tokensLimit;
             }
+           
+            // Must have some available tokens
+            assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
             // If tokensLimit is set to 0, it means assign the rest of the available tokens
-            _tokensLimit = _tokensLimit <= 0 ? totalSupplyCap - currentAvailableTokens : _tokensLimit;
+            // _tokensLimit = _tokensLimit <= 0 ? totalSupplyCap - currentAvailableTokens : _tokensLimit;
             // Can we cover this lot of tokens for the agent if they are all minted?
-            assert(_tokensLimit > 0 && totalSupplyCap >= (currentAvailableTokens + _tokensLimit));
+            // Note: If a sale finishes but doesn't meet it's target, further sale agents cant be registered to sell all the tokens if this line is in
+            // assert(_tokensLimit > 0 && totalSupplyCap >= (currentAvailableTokens + _tokensLimit));
             // Make sure the min deposit is less than or equal to the max
             assert(_minDeposit <= _maxDeposit);
             // Make sure the supplied contribution limit is not more than the targetEthMax - 0 means unlimited
@@ -211,9 +219,9 @@ contract RocketPoolToken is StandardToken, Owned {
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       
-                saleContractType: sha3(_saleContractType),         
+                saleContractType: sha3(_saleContractType), 
+                targetEthMin: _targetEthMin,           
                 targetEthMax: _targetEthMax,
-                targetEthMin: _targetEthMin,   
                 tokensLimit: _tokensLimit,  
                 tokensMinted: 0,
                 minDeposit: _minDeposit,

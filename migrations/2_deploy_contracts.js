@@ -37,8 +37,8 @@ module.exports = function(deployer) {
                 rocketPoolTokenInstance.setSaleAgentContract(
                     rocketPoolReserveFund.address,
                     'reserveFund',
-                    salesContractsSettings.reserveFund.targetEthMax,
                     salesContractsSettings.reserveFund.targetEthMin,
+                    salesContractsSettings.reserveFund.targetEthMax,
                     salesContractsSettings.reserveFund.tokensLimit,
                     salesContractsSettings.reserveFund.minDeposit,
                     salesContractsSettings.reserveFund.maxDeposit,
@@ -54,8 +54,8 @@ module.exports = function(deployer) {
                 rocketPoolTokenInstance.setSaleAgentContract(
                     rocketPoolPresale.address,
                     'presale',
-                    salesContractsSettings.presale.targetEthMax,
                     salesContractsSettings.presale.targetEthMin,
+                    salesContractsSettings.presale.targetEthMax,
                     salesContractsSettings.presale.tokensLimit,
                     salesContractsSettings.presale.minDeposit,
                     salesContractsSettings.presale.maxDeposit,

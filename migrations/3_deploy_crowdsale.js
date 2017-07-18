@@ -29,8 +29,8 @@ module.exports = function(deployer) {
             rocketPoolTokenInstance.setSaleAgentContract(
                 rocketPoolCrowdsale.address,
                 'crowdsale',
-                salesContractsSettings.crowdsale.targetEthMax,
                 salesContractsSettings.crowdsale.targetEthMin,
+                salesContractsSettings.crowdsale.targetEthMax,
                 salesContractsSettings.crowdsale.tokensLimit,
                 salesContractsSettings.crowdsale.minDeposit,
                 salesContractsSettings.crowdsale.maxDeposit,

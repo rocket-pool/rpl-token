@@ -66,7 +66,7 @@ module.exports = {
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
                 targetEthMax: units.convert('10000', 'ether', 'wei'), // 10,000
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('0', 'ether', 'wei'), // 30,000,000 - 60%
+                tokensLimit: units.convert('3000000', 'ether', 'wei'), // 30,000,000 - 60%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed

@@ -167,7 +167,7 @@ contract('RocketPoolToken', function (accounts) {
                     saleContracts.reserveFund.fundingEndBlock,
                     saleContracts.reserveFund.contributionLimit,
                     saleContracts.reserveFund.depositAddress,
-                    { from:userFirst, gas: 250000 }).then(function (result) {
+                    { from:userFirst, gas: 550000 }).then(function (result) {
                         return result;
                     }).then(function(result) { 
                     assert(false, "Expect throw but didn't.");
