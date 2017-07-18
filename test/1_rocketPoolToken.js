@@ -176,7 +176,38 @@ contract('RocketPoolToken', function (accounts) {
                     });
             });
         });    
-    }); // End Test  
+    }); // End Test 
+    
+
+    // Begin Tests
+    it(printTitle('userFirst', 'fails to register new sale agent contract with more tokens than the totalSupplyCap'), function () {
+        // Contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Contract   
+            return rocketPoolReserveFund.deployed().then(function (rocketPoolReserveFundInstance) {
+                // Transaction
+                return rocketPoolTokenInstance.setSaleAgentContract(
+                    userFirst, 
+                    'myowncontract',
+                    1,
+                    100,
+                    web3.toWei('50000001', 'ether'), 
+                    0,
+                    100,
+                    saleContracts.reserveFund.fundingStartBlock,
+                    saleContracts.reserveFund.fundingEndBlock,
+                    saleContracts.reserveFund.contributionLimit,
+                    saleContracts.reserveFund.depositAddress,
+                    { from:owner, gas: 550000 }).then(function (result) {
+                        return result;
+                    }).then(function(result) { 
+                    assert(false, "Expect throw but didn't.");
+                    }).catch(function (error) {
+                        return checkThrow(error);
+                    });
+            });
+        });    
+    }); // End Test 
 
 
     it(printTitle('userFirst', 'fails to call mint function on main token contract'), function () {

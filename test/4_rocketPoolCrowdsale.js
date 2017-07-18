@@ -798,7 +798,44 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test  
 
 
-   
+   it(printTitle('userFirst', 'sends 10 tokens to userSecond successfully'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // Get the token balance of their account
+            return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                // userFirst
+                var userFirstTokenBalance = Number(result.valueOf());
+                // Get the token balance of their account
+                return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                    // userSecond
+                    var userSecondTokenBalance = Number(result.valueOf());
+                    // 10 Tokens
+                    var tokenAmount = Number(web3.toWei(10, 'ether'));
+                    // Transfer 10 tokens to second user now
+                    return rocketPoolTokenInstance.transfer(userSecond, tokenAmount, { from: userFirst, gas: 150000 }).then(function (result) {
+                        // Get the token balance of their account
+                        return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
+                            // userFirst after
+                            var userFirstTokenBalanceAfter = Number(result.valueOf());
+                            // Get the token balance of their account
+                            return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
+                                // userSecond after
+                                var userSecondTokenBalanceAfter = Number(result.valueOf());
+                                // Format it
+                                tokenAmount = Math.round(web3.fromWei(tokenAmount, 'ether'));        
+                                // Ok check the balances are correct now - use round to avoid minute floating point rounding issues when adding/subtracting in js
+                                return  Math.round(web3.fromWei(userFirstTokenBalanceAfter, 'ether')) == (Math.round(web3.fromWei(userFirstTokenBalance, 'ether')) - tokenAmount) &&
+                                        Math.round(web3.fromWei(userSecondTokenBalanceAfter, 'ether')) == (Math.round(web3.fromWei(userSecondTokenBalance, 'ether')) + tokenAmount)
+                                        ? true : false;
+                            }).then(function (result) {
+                                assert.isTrue(result, "userSecond receives correct amount of tokens.");
+                            });
+                        });
+                    });
+                });
+            });                    
+        });
+    }); // End Test  
 
    
 

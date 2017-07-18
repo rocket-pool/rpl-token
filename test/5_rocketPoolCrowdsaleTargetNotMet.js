@@ -627,7 +627,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
    /** REGISTER ANOTHER SALE AGENT CROWDSALE */
     
    // Begin Tests
-    it(printTitle('userFirst', 'fails to register new sale agent contract as they are not the owner of the token contract'), function () {
+    it(printTitle('owner', 'register another crowdsale agent since the first was not successfull'), function () {
         // Contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Transaction
@@ -653,7 +653,10 @@ contract('rocketPoolCrowdsale', function (accounts) {
                     });
                 });
         });
-    }); // End Test  
+     }); // End Test  
+    
+    
+
 
 
    
