@@ -79,8 +79,10 @@ contract('RocketPoolReserveFund', function (accounts) {
             targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
-            // Max ether allowed per account
-            contributionLimit: 0,
+            // Min ether allowed per deposit
+            minDeposit: 0,
+            // Max ether allowed per deposit
+            maxDeposit: 0,
             // Start block
             fundingStartBlock: 0,
             // End block
@@ -128,16 +130,19 @@ contract('RocketPoolReserveFund', function (accounts) {
                                 saleContracts.reserveFund.fundingStartBlock = result.valueOf();
                                 return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolReserveFundInstance.address).then(function(result) {
                                     saleContracts.reserveFund.fundingEndBlock = result.valueOf();
-                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolReserveFundInstance.address).then(function(result) {
-                                        saleContracts.reserveFund.contributionLimit = result.valueOf();
-                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolReserveFundInstance.address).then(function(result) {
-                                            saleContracts.reserveFund.depositAddress = result.valueOf();
-                                            // Set the token price in ether now - maxTargetEth / tokensLimit
-                                            tokenPriceInEther = saleContracts.reserveFund.targetEthMax / saleContracts.reserveFund.tokensLimit;
-                                            return saleContracts.reserveFund.depositAddress != 0 ? true : false;
-                                        }).then(function (result) {
-                                            assert.isTrue(result, "rocketPoolReserveFundInstance depositAddress verified.");
-                                        });  
+                                    return rocketPoolTokenInstance.getSaleContractDepositEtherMin.call(rocketPoolReserveFundInstance.address).then(function(result) {
+                                        saleContracts.reserveFund.minDeposit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolReserveFundInstance.address).then(function (result) {
+                                            saleContracts.reserveFund.maxDeposit = result.valueOf();
+                                            return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolReserveFundInstance.address).then(function (result) {
+                                                saleContracts.reserveFund.depositAddress = result.valueOf();
+                                                // Set the token price in ether now - maxTargetEth / tokensLimit
+                                                tokenPriceInEther = saleContracts.reserveFund.targetEthMax / saleContracts.reserveFund.tokensLimit;
+                                                return saleContracts.reserveFund.depositAddress != 0 ? true : false;
+                                            }).then(function (result) {
+                                                assert.isTrue(result, "rocketPoolReserveFundInstance depositAddress verified.");
+                                            });
+                                        });
                                     });
                                 });
                             });

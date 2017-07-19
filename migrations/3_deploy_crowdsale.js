@@ -36,11 +36,10 @@ module.exports = function(deployer) {
                 salesContractsSettings.crowdsale.maxDeposit,
                 salesContractsSettings.crowdsale.fundingStartBlock,
                 salesContractsSettings.crowdsale.fundingEndBlock,
-                salesContractsSettings.crowdsale.contributionLimit,
                 crowdsaleDepositAddress
                 , { from: web3.eth.coinbase }
             );
-            console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Crowdsale');
+            console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Crowdsale 1');
             console.log(rocketPoolCrowdsale.address);
             console.log("\n");
         });  

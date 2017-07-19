@@ -28,8 +28,6 @@ module.exports = {
                 fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 0,
-                // Max ether allowed per account
-                contributionLimit: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: 'testrpccoinbase'
             },
@@ -49,17 +47,16 @@ module.exports = {
                 fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 0,
-                // Max ether allowed per account
-                contributionLimit: units.convert('4000', 'ether', 'wei'),
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: 'testrpccoinbase'
             },
             // This is a proportionally distributed crowdsale, when the targetEthMin is met, the sale is considered a success and users can collect their tokens + refund.
+            // Estimate 18sec blocks including uncles, brings us too 4,800 blocks per day
             'crowdsale': {
                 // The min amount to raise to consider the sale a success
                 targetEthMin: units.convert('5', 'ether', 'wei'), // 5,000
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
-                targetEthMax: units.convert('10000', 'ether', 'wei'), // 10,000
+                targetEthMax: units.convert('30000', 'ether', 'wei'), // 30,000
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
                 tokensLimit: units.convert('3000000', 'ether', 'wei'), // 30,000,000 - 60%
                 // What the minimum deposit amount allowed
@@ -69,9 +66,7 @@ module.exports = {
                 // Start block
                 fundingStartBlock: 15,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 26,
-                // Max ether allowed per account 2 Ether
-                contributionLimit: units.convert('3', 'ether', 'wei'),
+                fundingEndBlock: 25,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: 'testrpccoinbase'
             }

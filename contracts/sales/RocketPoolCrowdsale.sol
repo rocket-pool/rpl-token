@@ -37,7 +37,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
-        if(rocketPoolToken.validateContribution(msg.sender, msg.value)) {
+        if(rocketPoolToken.validateContribution(msg.value)) {
             // Add to contributions
             contributions[msg.sender] += msg.value;
             contributedTotal += msg.value;

@@ -44,7 +44,6 @@ module.exports = function(deployer) {
                     salesContractsSettings.reserveFund.maxDeposit,
                     salesContractsSettings.reserveFund.fundingStartBlock,
                     salesContractsSettings.reserveFund.fundingEndBlock,
-                    salesContractsSettings.reserveFund.contributionLimit,
                     reserveFundDepositAddress
                     , { from: web3.eth.coinbase }
                 );
@@ -61,7 +60,6 @@ module.exports = function(deployer) {
                     salesContractsSettings.presale.maxDeposit,
                     salesContractsSettings.presale.fundingStartBlock,
                     salesContractsSettings.presale.fundingEndBlock,
-                    salesContractsSettings.presale.contributionLimit,
                     presaleDepositAddress
                     , { from: web3.eth.coinbase }
                 );

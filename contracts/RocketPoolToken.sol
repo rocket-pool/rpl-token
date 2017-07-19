@@ -54,7 +54,6 @@ contract RocketPoolToken is StandardToken, Owned {
         uint256 maxDeposit;                 // The maximum deposit amount allowed
         uint256 startBlock;                 // The start block when allowed to mint tokens
         uint256 endBlock;                   // The end block when to finish minting tokens
-        uint256 contributionLimit;          // The max ether amount per account that a user is able to pledge, passing 0 means unlimited
         address depositAddress;             // The address that receives the ether for that sale contract
         bool depositAddressCheckedIn;       // The address that receives the ether for that sale contract must check in with its sale contract to verify its a valid address that can interact
         bool finalised;                     // Has this sales contract been completed and the ether sent to the deposit address?
@@ -88,13 +87,12 @@ contract RocketPoolToken is StandardToken, Owned {
 
 
     // @dev General validation for a sales agent contract receiving a contribution, additional validation can be done in the sale contract if required
-    // @param _sender The address sent the contribution
     // @param _value The value of the contribution in wei
     // @return A boolean that indicates if the operation was successful.
-    function validateContribution(address _sender, uint256 _value) isSalesContract(msg.sender) returns (bool) {
+    function validateContribution(uint256 _value) isSalesContract(msg.sender) returns (bool) {
         // Get an instance of the sale agent contract
         SalesAgentInterface saleAgent = SalesAgentInterface(msg.sender);
-        // Did they send anything?
+        // Did they send anything from a proper address?
         assert(_value > 0);  
         // Check the depositAddress has been verified by the account holder
         assert(salesAgents[msg.sender].depositAddressCheckedIn == true);
@@ -108,11 +106,6 @@ contract RocketPoolToken is StandardToken, Owned {
         assert(_value <= salesAgents[msg.sender].maxDeposit);       
         // Does this deposit put it over the max target ether for the sale contract?
         assert((saleAgent.contributedTotal() + _value) <= salesAgents[msg.sender].targetEthMax);       
-        // Max sure the user has not exceeded their ether allocation - setting 0 means unlimited
-        if(salesAgents[msg.sender].contributionLimit > 0) {
-            // Get the users contribution so far
-            assert((saleAgent.getContributionOf(_sender) + _value) <= salesAgents[msg.sender].contributionLimit);   
-        }
         // All good
         return true;
     }
@@ -178,7 +171,6 @@ contract RocketPoolToken is StandardToken, Owned {
     /// @param _maxDeposit The maximum deposit amount allowed
     /// @param _startBlock The start block when allowed to mint tokens
     /// @param _endBlock The end block when to finish minting tokens
-    /// @param _contributionLimit The max ether amount per account that a user is able to pledge, passing 0 means unlimited
     /// @param _depositAddress The address that receives the ether for that sale contract
     function setSaleAgentContract(
         address _saleAddress, 
@@ -190,35 +182,18 @@ contract RocketPoolToken is StandardToken, Owned {
         uint256 _maxDeposit,
         uint256 _startBlock, 
         uint256 _endBlock, 
-        uint256 _contributionLimit, 
         address _depositAddress
     ) 
     // Only the owner can register a new sale agent
     public onlyOwner  
     {
-        if(_saleAddress != 0x0 && _depositAddress != 0x0) {           
-           
-
-            /* Note: If a sale finishes but doesn't meet it's target, further sale agents cant be registered to sell all the tokens if these lines are in 
-            // Count all the tokens currently available through our agents
-            uint256 currentAvailableTokens = 0;
-            for(uint256 i=0; i < salesAgentsAddresses.length; i++) {
-               currentAvailableTokens += salesAgents[salesAgentsAddresses[i]].tokensLimit;
-            }
-            // If tokensLimit is set to 0, it means assign the rest of the available tokens
-            // _tokensLimit = _tokensLimit <= 0 ? totalSupplyCap - currentAvailableTokens : _tokensLimit;
-            // Can we cover this lot of tokens for the agent if they are all minted?
-            // assert(_tokensLimit > 0 && totalSupplyCap >= (currentAvailableTokens + _tokensLimit));
-            *****/
+        if(_saleAddress != 0x0 && _depositAddress != 0x0) {    
 
              // Must have some available tokens
             assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
             // Make sure the min deposit is less than or equal to the max
             assert(_minDeposit <= _maxDeposit);
-            // Make sure the supplied contribution limit is not more than the targetEthMax - 0 means unlimited
-            if(_contributionLimit > 0) {
-                assert(_contributionLimit <= _targetEthMax);
-            }
+
             // Add the new sales contract
             salesAgents[_saleAddress] = salesAgent({
                 saleContractAddress: _saleAddress,       
@@ -230,8 +205,7 @@ contract RocketPoolToken is StandardToken, Owned {
                 minDeposit: _minDeposit,
                 maxDeposit: _maxDeposit,            
                 startBlock: _startBlock,                 
-                endBlock: _endBlock,  
-                contributionLimit: _contributionLimit,                 
+                endBlock: _endBlock,              
                 depositAddress: _depositAddress, 
                 depositAddressCheckedIn: false,  
                 finalised: false,     
@@ -295,6 +269,18 @@ contract RocketPoolToken is StandardToken, Owned {
         return salesAgents[_salesAgentAddress].targetEthMax;
     }
 
+    /// @dev Returns the min deposit amount of ether
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractDepositEtherMin(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].minDeposit;
+    }
+
+    /// @dev Returns the max deposit amount of ether
+    /// @param _salesAgentAddress The address of the token sale agent contract
+    function getSaleContractDepositEtherMax(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+        return salesAgents[_salesAgentAddress].maxDeposit;
+    }
+
     /// @dev Returns the address where the sale contracts ether will be deposited
     /// @param _salesAgentAddress The address of the token sale agent contract
     function getSaleContractDepositAddress(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(address)  {
@@ -331,10 +317,5 @@ contract RocketPoolToken is StandardToken, Owned {
         return salesAgents[_salesAgentAddress].tokensMinted;
     }
 
-    /// @dev Returns the per account contribution limit for the sale agent
-    /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractContributionLimit(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
-        return salesAgents[_salesAgentAddress].contributionLimit;
-    }
     
 }

@@ -81,8 +81,10 @@ contract('rocketPoolCrowdsale', function (accounts) {
             targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
-            // Max ether allowed per account
-            contributionLimit: 0,
+            // Min ether allowed per deposit
+            minDeposit: 0,
+            // Max ether allowed per deposit
+            maxDeposit: 0,
             // Start block
             fundingStartBlock: 0,
             // End block
@@ -131,28 +133,32 @@ contract('rocketPoolCrowdsale', function (accounts) {
                                 saleContracts.crowdsale.fundingStartBlock = result.valueOf();
                                 return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
                                     saleContracts.crowdsale.fundingEndBlock = result.valueOf();
-                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
-                                        saleContracts.crowdsale.contributionLimit = result.valueOf();
-                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
-                                            saleContracts.crowdsale.depositAddress = result.valueOf();
-                                            // Set the token price in ether now - minTargetEth / tokensLimit
-                                            tokenPriceInEther = saleContracts.crowdsale.targetEthMin / saleContracts.crowdsale.tokensLimit;
-                                            // Log it
-                                            console.log("\n");
-                                            console.log(printTitle('Sale Agent Details', '--------------------------'));
-                                            console.log("\n");
-                                            console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.crowdsale.targetEthMin, 'ether')));
-                                            console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.crowdsale.targetEthMax, 'ether')));
-                                            console.log(printTitle(' Start Block', saleContracts.crowdsale.fundingStartBlock));
-                                            console.log(printTitle(' End Block', saleContracts.crowdsale.fundingEndBlock));
-                                            console.log(printTitle(' Contribution Limit', saleContracts.crowdsale.contributionLimit));
-                                            console.log(printTitle(' Deposit Address', saleContracts.crowdsale.depositAddress));
-                                            console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
-                                            console.log("\n");
-                                            return saleContracts.crowdsale.depositAddress != 0 ? true : false;
-                                        }).then(function (result) {
-                                            assert.isTrue(result, "rocketPoolCrowdsaleInstance depositAddress verified.");
-                                        });  
+                                    return rocketPoolTokenInstance.getSaleContractDepositEtherMin.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
+                                        saleContracts.crowdsale.minDeposit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                                            saleContracts.crowdsale.maxDeposit = result.valueOf();
+                                            return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                                                saleContracts.crowdsale.depositAddress = result.valueOf();
+                                                // Set the token price in ether now - minTargetEth / tokensLimit
+                                                tokenPriceInEther = saleContracts.crowdsale.targetEthMin / saleContracts.crowdsale.tokensLimit;
+                                                // Log it
+                                                console.log("\n");
+                                                console.log(printTitle('Sale Agent Details', '--------------------------'));
+                                                console.log("\n");
+                                                console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.crowdsale.targetEthMin, 'ether')));
+                                                console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.crowdsale.targetEthMax, 'ether')));
+                                                console.log(printTitle(' Start Block', saleContracts.crowdsale.fundingStartBlock));
+                                                console.log(printTitle(' End Block', saleContracts.crowdsale.fundingEndBlock));
+                                                console.log(printTitle(' Min Deposit', web3.fromWei(saleContracts.crowdsale.minDeposit, 'ether')));
+                                                console.log(printTitle(' Max Deposit', web3.fromWei(saleContracts.crowdsale.maxDeposit, 'ether')));
+                                                console.log(printTitle(' Deposit Address', saleContracts.crowdsale.depositAddress));
+                                                console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
+                                                console.log("\n");
+                                                return saleContracts.crowdsale.depositAddress != 0 ? true : false;
+                                            }).then(function (result) {
+                                                assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
+                                            });
+                                        });
                                     });
                                 });
                             });
@@ -439,28 +445,6 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test 
 
 
-    it(printTitle('userSecond', 'makes successful deposit to crowdsale of 0.1 ether'), function () {
-        // Crowdsale contract   
-        return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
-            // Contribute amount
-            var sendAmount = Number(web3.toWei('0.1', 'ether')); 
-            // Get the contribution balance of their account now
-            return rocketPoolCrowdsaleInstance.getContributionOf.call(userSecond).then(function (result) {
-                // Original contribution amount
-                var contributionTotal = Number(result.valueOf());
-                // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userSecond, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                    // Get the contribution balance of their account now
-                    return rocketPoolCrowdsaleInstance.getContributionOf.call(userSecond).then(function (result) {
-                        return result.valueOf() == contributionTotal + sendAmount ? true : false;
-                    });
-                }).then(function (result) {
-                    assert.isTrue(result, "Contribution made successfully.");
-                });
-            });
-        });    
-    }); // End Test
-
 
     // END BLOCK HITS
 
@@ -641,7 +625,6 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 100,        // Max deposit
                 0,          // Start block
                 5000,       // End block
-                0,          // Unlimited account contributions
                 saleContracts.crowdsale.depositAddress,
                 { from: owner, gas: 550000 }).then(function (result) {
                     // Check its registered

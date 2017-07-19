@@ -81,8 +81,10 @@ contract('rocketPoolCrowdsale', function (accounts) {
             targetEthMax: 0,
             // Maximum tokens the contract can distribute 
             tokensLimit: 0,
-            // Max ether allowed per account
-            contributionLimit: 0,
+            // Min ether allowed per deposit
+            minDeposit: 0,
+            // Max ether allowed per deposit
+            maxDeposit: 0,
             // Start block
             fundingStartBlock: 0,
             // End block
@@ -131,28 +133,32 @@ contract('rocketPoolCrowdsale', function (accounts) {
                                 saleContracts.crowdsale.fundingStartBlock = result.valueOf();
                                 return rocketPoolTokenInstance.getSaleContractEndBlock.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
                                     saleContracts.crowdsale.fundingEndBlock = result.valueOf();
-                                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
-                                        saleContracts.crowdsale.contributionLimit = result.valueOf();
-                                        return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
-                                            saleContracts.crowdsale.depositAddress = result.valueOf();
-                                            // Set the token price in ether now - minTargetEth / tokensLimit
-                                            tokenPriceInEther = saleContracts.crowdsale.targetEthMin / saleContracts.crowdsale.tokensLimit;
-                                            // Log it
-                                            console.log("\n");
-                                            console.log(printTitle('Sale Agent Details', '--------------------------'));
-                                            console.log("\n");
-                                            console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.crowdsale.targetEthMin, 'ether')));
-                                            console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.crowdsale.targetEthMax, 'ether')));
-                                            console.log(printTitle(' Start Block', saleContracts.crowdsale.fundingStartBlock));
-                                            console.log(printTitle(' End Block', saleContracts.crowdsale.fundingEndBlock));
-                                            console.log(printTitle(' Contribution Limit', saleContracts.crowdsale.contributionLimit));
-                                            console.log(printTitle(' Deposit Address', saleContracts.crowdsale.depositAddress));
-                                            console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
-                                            console.log("\n");
-                                            return saleContracts.crowdsale.depositAddress != 0 ? true : false;
-                                        }).then(function (result) {
-                                            assert.isTrue(result, "rocketPoolCrowdsaleInstance depositAddress verified.");
-                                        });  
+                                    return rocketPoolTokenInstance.getSaleContractDepositEtherMin.call(rocketPoolCrowdsaleInstance.address).then(function(result) {
+                                        saleContracts.crowdsale.minDeposit = result.valueOf();
+                                        return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                                            saleContracts.crowdsale.maxDeposit = result.valueOf();
+                                            return rocketPoolTokenInstance.getSaleContractDepositAddress.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                                                saleContracts.crowdsale.depositAddress = result.valueOf();
+                                                // Set the token price in ether now - minTargetEth / tokensLimit
+                                                tokenPriceInEther = saleContracts.crowdsale.targetEthMin / saleContracts.crowdsale.tokensLimit;
+                                                // Log it
+                                                console.log("\n");
+                                                console.log(printTitle('Sale Agent Details', '--------------------------'));
+                                                console.log("\n");
+                                                console.log(printTitle(' Target Ether Min', web3.fromWei(saleContracts.crowdsale.targetEthMin, 'ether')));
+                                                console.log(printTitle(' Target Ether Max', web3.fromWei(saleContracts.crowdsale.targetEthMax, 'ether')));
+                                                console.log(printTitle(' Start Block', saleContracts.crowdsale.fundingStartBlock));
+                                                console.log(printTitle(' End Block', saleContracts.crowdsale.fundingEndBlock));
+                                                console.log(printTitle(' Min Deposit', web3.fromWei(saleContracts.crowdsale.minDeposit, 'ether')));
+                                                console.log(printTitle(' Max Deposit', web3.fromWei(saleContracts.crowdsale.maxDeposit, 'ether')));
+                                                console.log(printTitle(' Deposit Address', saleContracts.crowdsale.depositAddress));
+                                                console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
+                                                console.log("\n");
+                                                return saleContracts.crowdsale.depositAddress != 0 ? true : false;
+                                            }).then(function (result) {
+                                                assert.isTrue(result, "rocketPoolPresaleInstance depositAddress verified.");
+                                            });
+                                        });
                                     });
                                 });
                             });
@@ -249,13 +255,13 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test 
 
 
-    it(printTitle('userFirst', 'fails to deposit by sending more than the ContributionLimit will allow per account'), function () {
+    it(printTitle('userFirst', 'fails to deposit by sending more than the maxDeposit will allow per account'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
                 // Get the max ether per account
-                return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
                     // Contribute amount = 1 ether more than allowed
                     var sendAmount = Number(result.valueOf()) + Number(web3.toWei('1', 'ether'));
                     // Transaction
@@ -287,7 +293,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test   
 
     
-    it(printTitle('userFirst', 'makes another successful deposit to max out their account contribution'), function () {
+    it(printTitle('userFirst', 'makes another successful deposit to at the maxiumum allowed'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
@@ -297,7 +303,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                     // His contrbutions so far
                     var userFirstContributionTotal = Number(result.valueOf());
                     // Get the max ether per account
-                    return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                    return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
                         var maxEthAllocation = Number(result.valueOf());
                         // Contribute the exact amount needed to set it at the per account threshold
                         var sendAmount = maxEthAllocation - userFirstContributionTotal;
@@ -317,33 +323,15 @@ contract('rocketPoolCrowdsale', function (accounts) {
     }); // End Test 
 
    
-    it(printTitle('userFirst', 'fails to deposit using by adding to their deposit that than exceeds the ContributionLimit will allow per account'), function () {
-        // Token contract   
-        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
-            // Crowdsale contract   
-            return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
-                // Contribute amount
-                var sendAmount = Number(web3.toWei('1', 'ether'));
-                // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
-                    return result;
-                }).then(function (result) {
-                    assert(false, "Expect throw but didn't.");
-                }).catch(function (error) {
-                    return checkThrow(error);
-                });
-            });
-        }); // End Test
-    });
+   
 
-
-    it(printTitle('userSecond', 'deposits the ContributionLimit for their contribution'), function () {
+    it(printTitle('userSecond', 'deposits to at the maxiumum allowed in a single transaction'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // Crowdsale contract   
             return rocketPoolCrowdsale.deployed().then(function (rocketPoolCrowdsaleInstance) {
                 // Get the max ether per account
-                return rocketPoolTokenInstance.getSaleContractContributionLimit.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
+                return rocketPoolTokenInstance.getSaleContractDepositEtherMax.call(rocketPoolCrowdsaleInstance.address).then(function (result) {
                     // Contribute amount
                     var sendAmount = Number(result.valueOf());
                     // Transaction
