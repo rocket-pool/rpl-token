@@ -2,6 +2,7 @@ pragma solidity ^0.4.10;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
 import "../lib/Arithmetic.sol";
+import "../base/Owned.sol";
 
 
 /// @title The main Rocket Pool Token (RPL) presale contract
@@ -17,7 +18,7 @@ import "../lib/Arithmetic.sol";
 *   is passed.
 /****************************************************************/
 
-contract RocketPoolPresale is SalesAgent  {
+contract RocketPoolPresale is SalesAgent, Owned  {
 
     /**** Properties ***********/
 
@@ -25,6 +26,8 @@ contract RocketPoolPresale is SalesAgent  {
     mapping (address => Allocations) private allocations;
     // Keep an array of all our addresses for iteration
     address[] private reservedAllocations;
+    // Reserved ether allocation total
+    uint256 totalReservedEther = 0;
 
     /**** Structs **************/
 
@@ -49,23 +52,35 @@ contract RocketPoolPresale is SalesAgent  {
     function RocketPoolPresale(address _tokenContractAddress) {
         // Set the main token address
         tokenContractAddress = _tokenContractAddress;
-        // The presale addresses and reserved amounts, if a presale user does not buy all their tokens, they roll into the public crowdsale which follows this one
-        // NOTE: If your testing with testrpc, you'll need to add the accounts in here that it generates for the second and third user eg accounts[1], accounts[2], accounts[3] if running the unit tests
-        addPresaleAllocation(0x66d337350b66b6916e88657db520e00917300230, 2 ether);
-        addPresaleAllocation(0x254e5310caa0563e0cbc14ea6a840f5cc88d350b, 1 ether);
-        addPresaleAllocation(0x318590f7e203b608ac14cf4af9aeb9378ea32a4d, 0.5 ether);
     }
 
 
-    /// @dev Add a presale user
-    function addPresaleAllocation(address _address, uint256 _amount) private {
-        // Add the user and their allocation amount in Wei
-        allocations[_address] = Allocations({
-            amount: _amount,
-            exists: true 
-        }); 
-        // Store our address so we can iterate over it if needed
-        reservedAllocations.push(_address);
+    /// @dev Add a presale user - onlyOwner
+    /// @param _address Address of the presale user
+    /// @param _amount Amount allocated for the presale user
+    function addPresaleAllocation(address _address, uint256 _amount) onlyOwner {
+        // Get the token contract
+        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // Do we have a valid amount and aren't exceeding the total ether allowed for this sale agent
+        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= (_amount + totalReservedEther)) {
+            // Does the user exist already?
+            if(allocations[_address].exists == false) {
+                // Add the user and their allocation amount in Wei
+                allocations[_address] = Allocations({
+                    amount: _amount,
+                    exists: true 
+                }); 
+                // Store our address so we can iterate over it if needed
+                reservedAllocations.push(_address);
+            }else{
+                // Add to their reserved amount
+                allocations[_address].amount += _amount;
+            }
+            // Add it to the total
+            totalReservedEther += _amount;
+            FlagUint(_amount);
+            FlagUint(totalReservedEther);
+        } 
     }
 
     /// @dev Get a presale users ether allocation

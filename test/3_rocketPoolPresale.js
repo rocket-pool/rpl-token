@@ -209,6 +209,92 @@ contract('rocketPoolPresale', function (accounts) {
     });   
 
 
+    it(printTitle('userFourth', 'fails to register a presale participant as he\'s not the owner'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Contribute amount = 1 ether more than allowed
+                var reservedEtherAmount = web3.toWei('10', 'ether');
+                // Transaction
+                return rocketPoolPresaleInstance.addPresaleAllocation(userFourth, reservedEtherAmount, { from: userFourth, gas: 250000 }).then(function (result) {
+                    return result;
+                }).then(function(result) { 
+                    assert(false, "Expect throw but didn't.");
+                }).catch(function (error) {
+                    return checkThrow(error);
+                });
+            });
+        });
+    }); // End Test  
+
+
+    it(printTitle('owner', 'register a presale participant - userFirst (1 ether)'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Reserved amount
+                var reservedEtherAmount = web3.toWei('2', 'ether');
+                // Transaction
+                return rocketPoolPresaleInstance.addPresaleAllocation(userFirst, reservedEtherAmount, { from: owner, gas: 250000 }).then(function (result) {
+                    // Now check the reserved amount is correct
+                    return rocketPoolPresaleInstance.getPresaleAllocation.call(userFirst).then(function (result) {
+                        // Registered ok?
+                        return reservedEtherAmount == result.valueOf();
+                    }).then(function (result) {
+                        assert.isTrue(result, "owner registers new presale participant");
+                    });
+                });
+            });
+        });
+    }); // End Test  
+
+    
+    it(printTitle('owner', 'register a presale participant - userSecond (1 ether)'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Reserved amount
+                var reservedEtherAmount = web3.toWei('1', 'ether');
+                // Transaction
+                return rocketPoolPresaleInstance.addPresaleAllocation(userSecond, reservedEtherAmount, { from: owner, gas: 250000 }).then(function (result) {
+                    // Now check the reserved amount is correct
+                    return rocketPoolPresaleInstance.getPresaleAllocation.call(userSecond).then(function (result) {
+                        // Registered ok?
+                        return reservedEtherAmount == result.valueOf();
+                    }).then(function (result) {
+                        assert.isTrue(result, "owner registers new presale participant");
+                    });
+                });
+            });
+        });
+    }); // End Test  
+
+
+    it(printTitle('owner', 'register a presale participant - userThird (0.5 ether)'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Reserved amount
+                var reservedEtherAmount = web3.toWei('0.5', 'ether');
+                // Transaction
+                return rocketPoolPresaleInstance.addPresaleAllocation(userThird, reservedEtherAmount, { from: owner, gas: 250000 }).then(function (result) {
+                    // Now check the reserved amount is correct
+                    return rocketPoolPresaleInstance.getPresaleAllocation.call(userThird).then(function (result) {
+                        // Registered ok?
+                        return reservedEtherAmount != result.valueOf();
+                    }).then(function (result) {
+                        assert.isTrue(result, "owner registers new presale participant");
+                    });
+                });
+            });
+        });
+    }); // End Test  
+
+
     it(printTitle('userFourth', 'fails to deposit ether as he\'s not part of the presale'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
