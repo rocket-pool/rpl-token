@@ -229,7 +229,7 @@ contract('rocketPoolPresale', function (accounts) {
     }); // End Test  
 
 
-    it(printTitle('owner', 'register a presale participant - userFirst (1 ether)'), function () {
+    it(printTitle('owner', 'register a presale participant - userFirst (2 ether)'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // presale contract   
@@ -285,7 +285,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Now check the reserved amount is correct
                     return rocketPoolPresaleInstance.getPresaleAllocation.call(userThird).then(function (result) {
                         // Registered ok?
-                        return reservedEtherAmount != result.valueOf();
+                        return reservedEtherAmount == result.valueOf();
                     }).then(function (result) {
                         assert.isTrue(result, "owner registers new presale participant");
                     });
@@ -553,6 +553,29 @@ contract('rocketPoolPresale', function (accounts) {
             });
         });
     });   
+
+
+    it(printTitle('userThird', 'fails to deposit and receive their reserved tokens after presale is finalised'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                 // Get the amount that's allocated to the presale user
+                return rocketPoolPresaleInstance.getPresaleAllocation.call(userThird).then(function (result) {
+                    // Send what we've been allocated
+                    var sendAmount = result.valueOf();
+                    // Transaction
+                    return rocketPoolPresaleInstance.createTokens({ from: userThird, value: sendAmount, gas: 350000 }).then(function (result) {
+                        return result;
+                    }).then(function(result) { 
+                        assert(false, "Expect throw but didn't.");
+                    }).catch(function (error) {
+                        return checkThrow(error);
+                    });
+                });
+            });
+        });
+    }); // End Test  
 
 
     it(printTitle('userFirst', 'sends 10 tokens to userSecond successfully'), function () {
