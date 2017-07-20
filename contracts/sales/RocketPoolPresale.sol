@@ -27,7 +27,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
     // Keep an array of all our addresses for iteration
     address[] private reservedAllocations;
     // Reserved ether allocation total
-    uint256 totalReservedEther = 0;
+    uint256 public totalReservedEther = 0;
 
     /**** Structs **************/
 

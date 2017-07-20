@@ -295,6 +295,29 @@ contract('rocketPoolPresale', function (accounts) {
     }); // End Test  
 
 
+    it(printTitle('owner', 'increases ether allocation for presale participant - userThird (0.5 ether)'), function () {
+        // Token contract   
+        return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
+            // presale contract   
+            return rocketPoolPresale.deployed().then(function (rocketPoolPresaleInstance) {
+                // Reserved amount
+                var reservedEtherAmount = web3.toWei('0.5', 'ether');
+                // Transaction
+                return rocketPoolPresaleInstance.addPresaleAllocation(userThird, reservedEtherAmount, { from: owner, gas: 250000 }).then(function (result) {
+                    // Now check the reserved amount is correct
+                    return rocketPoolPresaleInstance.getPresaleAllocation.call(userThird).then(function (result) {
+                        // They should have one ether total now (0.5 + 0.5)
+                        return web3.toWei('1', 'ether') == result.valueOf();
+                    }).then(function (result) {
+                        assert.isTrue(result, "owner registers new presale participant");
+                    });
+                });
+            });
+        });
+    }); // End Test  
+
+
+    
     it(printTitle('userFourth', 'fails to deposit ether as he\'s not part of the presale'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
