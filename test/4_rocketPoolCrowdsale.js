@@ -233,6 +233,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
             });
         });
     }); // End Test
+
  
 
     // START BLOCK  should have been reached now for the start of the crowdfund
@@ -253,6 +254,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
             }); 
         });    
     }); // End Test 
+    
 
 
     it(printTitle('userFirst', 'fails to deposit by sending more than the maxDeposit will allow per account'), function () {

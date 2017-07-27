@@ -1,8 +1,9 @@
 pragma solidity ^0.4.10;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
-import "../lib/Arithmetic.sol";
 import "../base/Owned.sol";
+import "../lib/Arithmetic.sol";
+import "../lib/SafeMath.sol";
 
 
 /// @title The main Rocket Pool Token (RPL) presale contract
@@ -74,12 +75,10 @@ contract RocketPoolPresale is SalesAgent, Owned  {
                 reservedAllocations.push(_address);
             }else{
                 // Add to their reserved amount
-                allocations[_address].amount += _amount;
+                allocations[_address].amount = SafeMath.add(allocations[_address].amount, _amount);
             }
             // Add it to the total
-            totalReservedEther += _amount;
-            FlagUint(_amount);
-            FlagUint(totalReservedEther);
+            totalReservedEther = SafeMath.add(totalReservedEther, _amount);
         } 
     }
 
@@ -100,9 +99,9 @@ contract RocketPoolPresale is SalesAgent, Owned  {
             assert(contributions[msg.sender] == 0);
             // Have they deposited enough to cover their reserved amount?
             assert(msg.value >= allocations[msg.sender].amount);
-            // Add to contributions
-            contributions[msg.sender] += msg.value;
-            contributedTotal += msg.value;
+            // Add to contributions, automatically checks for overflow with safeMath
+            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
+            contributedTotal = SafeMath.add(contributedTotal, msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
             // Mint the tokens now for that user instantly
@@ -118,7 +117,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
         // If the user sent too much ether, calculate the refund
-        uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? contributions[msg.sender] - allocations[msg.sender].amount : 0;    
+        uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? SafeMath.sub(contributions[msg.sender], allocations[msg.sender].amount) : 0;    
         // Send the refund, throw if it doesn't succeed
         if (refundAmount > 0) {
             // Avoid recursion calls and deduct now

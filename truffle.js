@@ -64,9 +64,9 @@ module.exports = {
                 // What is the maximum deposit size allowed
                 maxDeposit: units.convert('4', 'ether', 'wei'),
                 // Start block
-                fundingStartBlock: 15,
+                fundingStartBlock: 16,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 25,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
+                fundingEndBlock: 26,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: 'testrpccoinbase'
             }

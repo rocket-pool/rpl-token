@@ -3,6 +3,7 @@ import "./base/Owned.sol";
 import "./base/StandardToken.sol";
 import "./interface/SalesAgentInterface.sol";
 import "./lib/Arithmetic.sol";
+import "./lib/SafeMath.sol";
 
 /// @title The main Rocket Pool Token (RPL) contract
 /// @author David Rugendyke - http://www.rocketpool.net
@@ -105,7 +106,7 @@ contract RocketPoolToken is StandardToken, Owned {
         // Is it below the max deposit allowed?
         assert(_value <= salesAgents[msg.sender].maxDeposit);       
         // Does this deposit put it over the max target ether for the sale contract?
-        assert((saleAgent.contributedTotal() + _value) <= salesAgents[msg.sender].targetEthMax);       
+        assert(SafeMath.add(saleAgent.contributedTotal(), _value) <= salesAgents[msg.sender].targetEthMax);       
         // All good
         return true;
     }
@@ -139,17 +140,17 @@ contract RocketPoolToken is StandardToken, Owned {
         // No minting if the sale contract has finalised
         assert(salesAgents[msg.sender].finalised == false);
         // Check we don't exceed the assigned tokens of the sale agent
-        assert(salesAgents[msg.sender].tokensLimit >= salesAgents[msg.sender].tokensMinted + _amount);
+        assert(salesAgents[msg.sender].tokensLimit >= SafeMath.add(salesAgents[msg.sender].tokensMinted, _amount));
         // Verify ok balances and values
-        assert(_amount > 0 && (balances[_to] + _amount) > balances[_to]);
-        // Check we don't exceed the supply limit
-        assert((totalSupply + _amount) <= totalSupplyCap);
-        // Ok all good
-        balances[_to] += _amount;
-        // Add to the total minted for that agent
-        salesAgents[msg.sender].tokensMinted += _amount;
-        // Add to the overall total minted
-        totalSupply += _amount;
+        assert(_amount > 0);
+         // Check we don't exceed the supply limit
+        assert(SafeMath.add(totalSupply, _amount) <= totalSupplyCap);
+         // Ok all good
+        balances[_to] = SafeMath.add(balances[_to], _amount);
+        // Add to the total minted for that agent, automatically checks for overflow with safeMath
+        salesAgents[msg.sender].tokensMinted = SafeMath.add(salesAgents[msg.sender].tokensMinted, _amount);
+        // Add to the overall total minted, automatically checks for overflow with safeMath
+        totalSupply = SafeMath.add(totalSupply, _amount);
         // Fire the event
         mintToken(msg.sender, _to, _amount);
         // Completed
@@ -158,7 +159,7 @@ contract RocketPoolToken is StandardToken, Owned {
 
     /// @dev Returns the amount of tokens that can still be minted
     function getRemainingTokens()  public returns(uint256)  {
-        return totalSupplyCap - totalSupply;
+        return SafeMath.sub(totalSupplyCap, totalSupply);
     }
     
     /// @dev Set the address of a new crowdsale/presale contract agent if needed, usefull for upgrading

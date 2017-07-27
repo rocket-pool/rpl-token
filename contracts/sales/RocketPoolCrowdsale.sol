@@ -2,6 +2,7 @@ pragma solidity ^0.4.10;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
 import "../lib/Arithmetic.sol";
+import "../lib/SafeMath.sol";
 
 
 /// @title The main Rocket Pool Token (RPL) crowdsale contract
@@ -38,9 +39,9 @@ contract RocketPoolCrowdsale is SalesAgent  {
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
         if(rocketPoolToken.validateContribution(msg.value)) {
-            // Add to contributions
-            contributions[msg.sender] += msg.value;
-            contributedTotal += msg.value;
+            // Add to contributions, automatically checks for overflow with safeMath
+            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
+            contributedTotal = SafeMath.add(contributedTotal, msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
         }
