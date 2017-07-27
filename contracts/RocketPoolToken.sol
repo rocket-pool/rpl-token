@@ -64,6 +64,7 @@ contract RocketPoolToken is StandardToken, Owned {
     /*** Events ****************/
 
     event mintToken(address _agent, address _address, uint256 _value);
+    event saleFinalised(address _agent, address _address, uint256 _value);
   
     /*** Tests *****************/
 
@@ -145,7 +146,7 @@ contract RocketPoolToken is StandardToken, Owned {
         assert(_amount > 0);
          // Check we don't exceed the supply limit
         assert(SafeMath.add(totalSupply, _amount) <= totalSupplyCap);
-         // Ok all good
+         // Ok all good, automatically checks for overflow with safeMath
         balances[_to] = SafeMath.add(balances[_to], _amount);
         // Add to the total minted for that agent, automatically checks for overflow with safeMath
         salesAgents[msg.sender].tokensMinted = SafeMath.add(salesAgents[msg.sender].tokensMinted, _amount);
@@ -238,6 +239,8 @@ contract RocketPoolToken is StandardToken, Owned {
         assert(saleAgent.contributedTotal() >= salesAgents[msg.sender].targetEthMin);
         // We're done now
         salesAgents[msg.sender].finalised = true;
+        // Fire the event
+        saleFinalised(msg.sender, _sender, salesAgents[msg.sender].tokensMinted);
         // All good
         return true;
     }
