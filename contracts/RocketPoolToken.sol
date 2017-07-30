@@ -27,7 +27,7 @@ contract RocketPoolToken is StandardToken, Owned {
 
      /**** Properties ***********/
 
-    string public name = 'Rocket Pool Token';
+    string public name = 'Rocket Pool';
     string public symbol = 'RPL';
     string public version = "1.0";
     // Set our token units
@@ -105,7 +105,9 @@ contract RocketPoolToken is StandardToken, Owned {
         // Is it above the min deposit amount?
         assert(_value >= salesAgents[msg.sender].minDeposit); 
         // Is it below the max deposit allowed?
-        assert(_value <= salesAgents[msg.sender].maxDeposit);       
+        assert(_value <= salesAgents[msg.sender].maxDeposit); 
+        // No contributions if the sale contract has finalised
+        assert(salesAgents[msg.sender].finalised == false);      
         // Does this deposit put it over the max target ether for the sale contract?
         assert(SafeMath.add(saleAgent.contributedTotal(), _value) <= salesAgents[msg.sender].targetEthMax);       
         // All good
@@ -159,7 +161,7 @@ contract RocketPoolToken is StandardToken, Owned {
     }
 
     /// @dev Returns the amount of tokens that can still be minted
-    function getRemainingTokens()  public returns(uint256)  {
+    function getRemainingTokens() public constant returns(uint256)  {
         return SafeMath.sub(totalSupplyCap, totalSupply);
     }
     
@@ -257,67 +259,67 @@ contract RocketPoolToken is StandardToken, Owned {
 
     /// @dev Returns true if this sales contract has finalised
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractIsFinalised(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
+    function getSaleContractIsFinalised(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(bool)  {
         return salesAgents[_salesAgentAddress].finalised;
     }
 
     /// @dev Returns the min target amount of ether the contract wants to raise
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractTargetEtherMin(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractTargetEtherMin(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].targetEthMin;
     }
 
     /// @dev Returns the max target amount of ether the contract can raise
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractTargetEtherMax(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractTargetEtherMax(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].targetEthMax;
     }
 
     /// @dev Returns the min deposit amount of ether
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractDepositEtherMin(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractDepositEtherMin(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].minDeposit;
     }
 
     /// @dev Returns the max deposit amount of ether
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractDepositEtherMax(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractDepositEtherMax(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].maxDeposit;
     }
 
     /// @dev Returns the address where the sale contracts ether will be deposited
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractDepositAddress(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(address)  {
+    function getSaleContractDepositAddress(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(address)  {
         return salesAgents[_salesAgentAddress].depositAddress;
     }
 
     /// @dev Returns the true if the sale agents deposit address has been verified
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractDepositAddressVerified(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(bool)  {
+    function getSaleContractDepositAddressVerified(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(bool)  {
         return salesAgents[_salesAgentAddress].depositAddressCheckedIn;
     }
 
     /// @dev Returns the start block for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractStartBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractStartBlock(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].startBlock;
     }
 
     /// @dev Returns the start block for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractEndBlock(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractEndBlock(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].endBlock;
     }
 
     /// @dev Returns the max tokens for the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractTokensLimit(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractTokensLimit(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].tokensLimit;
     }
 
     /// @dev Returns the token total currently minted by the sale agent
     /// @param _salesAgentAddress The address of the token sale agent contract
-    function getSaleContractTokensMinted(address _salesAgentAddress) isSalesContract(_salesAgentAddress) public returns(uint256)  {
+    function getSaleContractTokensMinted(address _salesAgentAddress) constant isSalesContract(_salesAgentAddress) public returns(uint256)  {
         return salesAgents[_salesAgentAddress].tokensMinted;
     }
 

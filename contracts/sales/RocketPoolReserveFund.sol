@@ -35,11 +35,11 @@ contract RocketPoolReserveFund is SalesAgent {
             rocketPoolToken.getSaleContractDepositAddress(this),
             rocketPoolToken.getSaleContractTokensLimit(this)
         );
-        // Fire the event
-        ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
         // Finalise this sale, will verify the senders address, contribution amount and more - 
         // Throws if basic finalisation settings are not met and msg.sender must be the depositAddress asigned for the sale agent
         rocketPoolToken.setSaleContractFinalised(msg.sender);  
+        // Fire the event
+        ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
     }
 
     

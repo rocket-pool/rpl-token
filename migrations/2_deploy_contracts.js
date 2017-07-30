@@ -28,7 +28,7 @@ module.exports = function(deployer) {
   // Deploy Rocket Pool token first
   deployer.deploy(rocketPoolToken).then(function () {
       // Deploy reserve fund contract next
-      return deployer.deploy(rocketPoolReserveFund, rocketPoolToken.address).then(function () {
+       return deployer.deploy(rocketPoolReserveFund, rocketPoolToken.address).then(function () {
           // Deploy presale contract next
           return deployer.deploy(rocketPoolPresale, rocketPoolToken.address).then(function () {
             // Set everything the main token contract needs now

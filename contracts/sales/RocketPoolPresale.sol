@@ -62,8 +62,8 @@ contract RocketPoolPresale is SalesAgent, Owned  {
     function addPresaleAllocation(address _address, uint256 _amount) onlyOwner {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Do we have a valid amount and aren't exceeding the total ether allowed for this sale agent
-        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= (_amount + totalReservedEther)) {
+        // Do we have a valid amount and aren't exceeding the total ether allowed for this sale agent and the sale hasn't ended?
+        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= SafeMath.add(_amount, totalReservedEther) && !rocketPoolToken.getSaleContractIsFinalised(this)) {
             // Does the user exist already?
             if(allocations[_address].exists == false) {
                 // Add the user and their allocation amount in Wei
@@ -83,7 +83,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
     }
 
     /// @dev Get a presale users ether allocation
-    function getPresaleAllocation(address _address) public onlyPresaleUser(_address) returns(uint256) {
+    function getPresaleAllocation(address _address) public constant onlyPresaleUser(_address) returns(uint256) {
         // Get the users assigned amount
         return allocations[_address].amount;
     }
