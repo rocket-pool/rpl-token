@@ -326,7 +326,7 @@ contract('rocketPoolPresale', function (accounts) {
                 // Contribute amount = 1 ether more than allowed
                 var sendAmount = web3.toWei('1', 'ether');
                 // Transaction
-                return rocketPoolPresaleInstance.createTokens({ from: userFourth, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolPresaleInstance.sendTransaction({ from: userFourth, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function(result) { 
                     assert(false, "Expect throw but didn't.");
@@ -352,7 +352,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Get the amount
                     var presaleEtherAllocation = result.valueOf();
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         // Setup our check vars
                         var refund = 0;
                         for(var i=0; i < result.logs.length; i++) {
@@ -393,7 +393,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Get the amount
                     var presaleEtherAllocation = result.valueOf();
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userFirst, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         return result;
                     }).then(function(result) { 
                         assert(false, "Expect throw but didn't.");
@@ -417,7 +417,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Send just a bit less than what we've been allocated
                     var sendAmount = result.valueOf() - web3.toWei('0.1', 'ether');
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         return result;
                     }).then(function(result) { 
                         assert(false, "Expect throw but didn't.");
@@ -443,7 +443,7 @@ contract('rocketPoolPresale', function (accounts) {
                     var presaleEtherAllocation = result.valueOf();
                     var sendAmount = presaleEtherAllocation;
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         // Setup our check vars
                         var refund = 0;
                         for(var i=0; i < result.logs.length; i++) {
@@ -479,7 +479,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Send just a bit less than what we've been allocated
                     var sendAmount = result.valueOf();
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userSecond, to: rocketPoolPresaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         return result;
                     }).then(function(result) { 
                         assert(false, "Expect throw but didn't.");
@@ -588,7 +588,7 @@ contract('rocketPoolPresale', function (accounts) {
                     // Send what we've been allocated
                     var sendAmount = result.valueOf();
                     // Transaction
-                    return rocketPoolPresaleInstance.createTokens({ from: userThird, value: sendAmount, gas: 350000 }).then(function (result) {
+                    return rocketPoolPresaleInstance.sendTransaction({ from: userThird, value: sendAmount, gas: 350000 }).then(function (result) {
                         return result;
                     }).then(function(result) { 
                         assert(false, "Expect throw but didn't.");

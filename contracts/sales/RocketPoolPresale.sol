@@ -55,6 +55,27 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         tokenContractAddress = _tokenContractAddress;
     }
 
+    // Default payable
+    /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
+    function() payable public onlyPresaleUser(msg.sender) { 
+        // Get the token contract
+        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // Do some common contribution validation, will throw if an error occurs
+        if(rocketPoolToken.validateContribution(msg.value)) {
+            // Have they already collected their reserved amount?
+            assert(contributions[msg.sender] == 0);
+            // Have they deposited enough to cover their reserved amount?
+            assert(msg.value >= allocations[msg.sender].amount);
+            // Add to contributions, automatically checks for overflow with safeMath
+            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
+            contributedTotal = SafeMath.add(contributedTotal, msg.value);
+            // Fire event
+            Contribute(this, msg.sender, msg.value); 
+            // Mint the tokens now for that user instantly
+            mintSendTokens();
+        }
+    }
+
 
     /// @dev Add a presale user - onlyOwner
     /// @param _address Address of the presale user
@@ -89,25 +110,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
     }
 
 
-    /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
-    function createTokens() payable public onlyPresaleUser(msg.sender) { 
-        // Get the token contract
-        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Do some common contribution validation, will throw if an error occurs
-        if(rocketPoolToken.validateContribution(msg.value)) {
-            // Have they already collected their reserved amount?
-            assert(contributions[msg.sender] == 0);
-            // Have they deposited enough to cover their reserved amount?
-            assert(msg.value >= allocations[msg.sender].amount);
-            // Add to contributions, automatically checks for overflow with safeMath
-            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
-            contributedTotal = SafeMath.add(contributedTotal, msg.value);
-            // Fire event
-            Contribute(this, msg.sender, msg.value); 
-            // Mint the tokens now for that user instantly
-            mintSendTokens();
-        }
-    }
+    
 
 
     /// @dev Mint the tokens now for that user instantly
