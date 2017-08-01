@@ -33,8 +33,9 @@ contract RocketPoolCrowdsale is SalesAgent  {
     }
 
 
+    // Default payable
     /// @dev Accepts ETH from a contributor, calls the parent token contract to mint tokens
-    function createTokens() payable external { 
+    function() payable external { 
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs

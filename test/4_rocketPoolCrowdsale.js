@@ -182,7 +182,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 // Contribute amount = 1 ether
                 var sendAmount = web3.toWei('1', 'ether');
                 // Get the contract details
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function(result) { 
                     assert(false, "Expect throw but didn't.");
@@ -223,7 +223,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 // Contribute amount
                 var sendAmount = web3.toWei('1', 'ether');
                 // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function (result) {
                     assert(false, "Expect throw but didn't.");
@@ -244,7 +244,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
             // Contribute amount
             var sendAmount = web3.toWei('1', 'ether'); 
             // Transaction
-            return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
+            return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function(result) {
                 // Get the contribution balance of their account now
                 return rocketPoolCrowdsaleInstance.getContributionOf.call(userFirst).then(function (result) {
                     return result.valueOf() == sendAmount ? true : false;
@@ -267,7 +267,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                     // Contribute amount = 1 ether more than allowed
                     var sendAmount = Number(result.valueOf()) + Number(web3.toWei('1', 'ether'));
                     // Transaction
-                    return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         return result;
                     }).then(function (result) {
                         assert(false, "Expect throw but didn't.");
@@ -310,7 +310,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                         // Contribute the exact amount needed to set it at the per account threshold
                         var sendAmount = maxEthAllocation - userFirstContributionTotal;
                         // Transaction
-                        return rocketPoolCrowdsaleInstance.createTokens({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                        return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFirst, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                             // Get the contribution balance of their account now
                             return rocketPoolCrowdsaleInstance.getContributionOf.call(userFirst).then(function (result) {
                                 return result.valueOf() == maxEthAllocation ? true : false;
@@ -337,7 +337,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                     // Contribute amount
                     var sendAmount = Number(result.valueOf());
                     // Transaction
-                    return rocketPoolCrowdsaleInstance.createTokens({ from: userSecond, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                    return rocketPoolCrowdsaleInstance.sendTransaction({ from: userSecond, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                         // Get the contribution balance of their account now
                         return rocketPoolCrowdsaleInstance.getContributionOf.call(userSecond).then(function (result) {
                             return result.valueOf() == sendAmount ? true : false;
@@ -360,7 +360,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 // Contribute amount
                 var sendAmount = web3.toWei('1.33333945012327895', 'ether');
                 // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userThird, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolCrowdsaleInstance.sendTransaction({ from: userThird, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     // Get the contribution balance of their account now
                     return rocketPoolCrowdsaleInstance.getContributionOf.call(userThird).then(function (result) {
                         return result.valueOf() == sendAmount ? true : false;
@@ -417,7 +417,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 // Contribute amount
                 var sendAmount = web3.toWei('0.5', 'ether');
                 // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userFourth, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFourth, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     // Get the contribution balance of their account now
                     return rocketPoolCrowdsaleInstance.getContributionOf.call(userFourth).then(function (result) {
                         return result.valueOf() == sendAmount ? true : false;
@@ -443,7 +443,7 @@ contract('rocketPoolCrowdsale', function (accounts) {
                 // Contribute amount
                 var sendAmount = web3.toWei('0.5', 'ether');
                 // Transaction
-                return rocketPoolCrowdsaleInstance.createTokens({ from: userFourth, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
+                return rocketPoolCrowdsaleInstance.sendTransaction({ from: userFourth, to: rocketPoolCrowdsaleInstance.address, value: sendAmount, gas: 250000 }).then(function (result) {
                     return result;
                 }).then(function (result) {
                     assert(false, "Expect throw but didn't.");
