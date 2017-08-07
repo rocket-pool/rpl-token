@@ -24,6 +24,10 @@ import "../lib/SafeMath.sol";
 
 contract RocketPoolCrowdsale is SalesAgent  {
 
+    /**** Libs *****************/
+    
+    using SafeMath for uint;
+
     // Constructor
     /// @dev Sale Agent Init
     /// @param _tokenContractAddress The main token contract address
@@ -41,8 +45,8 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Do some common contribution validation, will throw if an error occurs
         if(rocketPoolToken.validateContribution(msg.value)) {
             // Add to contributions, automatically checks for overflow with safeMath
-            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
-            contributedTotal = SafeMath.add(contributedTotal, msg.value);
+            contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+            contributedTotal = contributedTotal.add(msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
         }

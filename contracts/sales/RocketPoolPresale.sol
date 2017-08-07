@@ -21,6 +21,10 @@ import "../lib/SafeMath.sol";
 
 contract RocketPoolPresale is SalesAgent, Owned  {
 
+    /**** Libs *****************/
+    
+    using SafeMath for uint;
+
     /**** Properties ***********/
 
     // Our rocket mini pools, should persist between any Rocket Pool contract upgrades
@@ -30,6 +34,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
     // Reserved ether allocation total
     uint256 public totalReservedEther = 0;
 
+    
     /**** Structs **************/
 
     struct Allocations {
@@ -67,8 +72,8 @@ contract RocketPoolPresale is SalesAgent, Owned  {
             // Have they deposited enough to cover their reserved amount?
             assert(msg.value >= allocations[msg.sender].amount);
             // Add to contributions, automatically checks for overflow with safeMath
-            contributions[msg.sender] = SafeMath.add(contributions[msg.sender], msg.value);
-            contributedTotal = SafeMath.add(contributedTotal, msg.value);
+            contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+            contributedTotal = contributedTotal.add(msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
             // Mint the tokens now for that user instantly
@@ -84,7 +89,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do we have a valid amount and aren't exceeding the total ether allowed for this sale agent and the sale hasn't ended?
-        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= SafeMath.add(_amount, totalReservedEther) && !rocketPoolToken.getSaleContractIsFinalised(this)) {
+        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= _amount.add(totalReservedEther) && !rocketPoolToken.getSaleContractIsFinalised(this)) {
             // Does the user exist already?
             if(allocations[_address].exists == false) {
                 // Add the user and their allocation amount in Wei
@@ -96,10 +101,10 @@ contract RocketPoolPresale is SalesAgent, Owned  {
                 reservedAllocations.push(_address);
             }else{
                 // Add to their reserved amount
-                allocations[_address].amount = SafeMath.add(allocations[_address].amount, _amount);
+                allocations[_address].amount = allocations[_address].amount.add(_amount);
             }
             // Add it to the total
-            totalReservedEther = SafeMath.add(totalReservedEther, _amount);
+            totalReservedEther = totalReservedEther.add(_amount);
         } 
     }
     
@@ -118,12 +123,12 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the exponent used for this token
         uint256 exponent = rocketPoolToken.exponent();
         // If the user sent too much ether, calculate the refund
-        uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? SafeMath.sub(contributions[msg.sender], allocations[msg.sender].amount) : 0;    
+        uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? contributions[msg.sender].sub(allocations[msg.sender].amount) : 0;    
         // Send the refund, throw if it doesn't succeed
         if (refundAmount > 0) {
             // Avoid recursion calls and deduct now
-            contributions[msg.sender] -= refundAmount;
-            contributedTotal -= refundAmount;
+            contributions[msg.sender] = contributions[msg.sender].sub(refundAmount);
+            contributedTotal = contributedTotal.sub(refundAmount);
             // Send the refund, throw if it doesn't succeed
             assert(msg.sender.send(refundAmount) == true);
             // Fire event
@@ -137,6 +142,11 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         uint256 tokenPrice = Arithmetic.overflowResistantFraction(rocketPoolToken.getSaleContractTargetEtherMax(this), exponent, totalTokens);
         // Total tokens they will receive
         uint256 tokenAmountToMint = Arithmetic.overflowResistantFraction(allocations[msg.sender].amount, exponent, tokenPrice);
+
+
+        //FlagUint(Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
+        //FlagUint(Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
+
         // Mint the tokens and give them to the user now
         rocketPoolToken.mint(msg.sender, tokenAmountToMint);         
     }

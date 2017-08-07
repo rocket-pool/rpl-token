@@ -18,9 +18,6 @@ var crowdsaleDepositAddress = network == 'development' ? web3.eth.coinbase : sal
 
 // Deploy now
 module.exports = function(deployer, network) {
-
-
-
         // Link libs
         deployer.link(arithmeticLib, [rocketPoolCrowdsale]);
         deployer.link(safeMathLib, [rocketPoolCrowdsale]);
