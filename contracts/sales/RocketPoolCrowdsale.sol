@@ -1,7 +1,6 @@
 pragma solidity ^0.4.11;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
-import "../lib/Arithmetic.sol";
 import "../lib/SafeMath.sol";
 
 
@@ -72,8 +71,6 @@ contract RocketPoolCrowdsale is SalesAgent  {
     function claimTokensAndRefund() external {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Get the exponent used for this token
-        uint256 exponent = rocketPoolToken.exponent();
         // Set the target ether amount locally
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
@@ -92,20 +89,12 @@ contract RocketPoolCrowdsale is SalesAgent  {
             } else {
                 // Max tokens alloted to this sale agent contract
                 uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
-                // Calculate what percent of the ether raised came from me
-                uint256 percEtherContributed = Arithmetic.overflowResistantFraction(userContributionTotal, exponent, contributedTotal);
                 // Calculate how many tokens the user gets
-                rocketPoolToken.mint(msg.sender, Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
+                rocketPoolToken.mint(msg.sender, totalTokens.mul(userContributionTotal) / contributedTotal);
                 // Calculate the refund this user will receive
-                assert(msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent)) == true);
+                assert(msg.sender.send((contributedTotal - targetEth).mul(userContributionTotal) / contributedTotal) == true);
                 // Fire event
                 ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
-
-                /*
-                FlagUint(totalTokens);
-                FlagUint(percEtherContributed);
-                FlagUint(Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
-                */
             }
         }
     }

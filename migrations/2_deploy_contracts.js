@@ -4,7 +4,6 @@ var rocketPoolReserveFund = artifacts.require("./sales/RocketPoolReserveFund.sol
 var rocketPoolPresale = artifacts.require("./sales/RocketPoolPresale.sol");
 
 // Libs
-var arithmeticLib = artifacts.require("./lib/Arithmetic.sol");
 var safeMathLib = artifacts.require("./lib/SafeMath.sol");
 
 // Get our network config - can exist in diff locations if doing unit tests vs deploying
@@ -21,9 +20,8 @@ var presaleDepositAddress = network == 'development' ? web3.eth.coinbase : sales
 // Deploy now
 module.exports = function(deployer) {
   // Setup libs
-  deployer.deploy([arithmeticLib, safeMathLib]);
+  deployer.deploy([safeMathLib]);
   // Link libs
-  deployer.link(arithmeticLib, [rocketPoolToken, rocketPoolPresale]);
   deployer.link(safeMathLib, [rocketPoolToken, rocketPoolPresale]);
   // Deploy Rocket Pool token first
   deployer.deploy(rocketPoolToken).then(function () {
