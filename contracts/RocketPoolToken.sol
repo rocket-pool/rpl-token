@@ -67,8 +67,8 @@ contract RocketPoolToken is StandardToken, Owned {
 
     /*** Events ****************/
 
-    event mintToken(address _agent, address _address, uint256 _value);
-    event saleFinalised(address _agent, address _address, uint256 _value);
+    event MintToken(address _agent, address _address, uint256 _value);
+    event SaleFinalised(address _agent, address _address, uint256 _value);
   
     /*** Tests *****************/
 
@@ -159,7 +159,7 @@ contract RocketPoolToken is StandardToken, Owned {
         // Add to the overall total minted, automatically checks for overflow with safeMath
         totalSupply = totalSupply.add(_amount);
         // Fire the event
-        mintToken(msg.sender, _to, _amount);
+        MintToken(msg.sender, _to, _amount);
         // Completed
         return true; 
     }
@@ -242,7 +242,7 @@ contract RocketPoolToken is StandardToken, Owned {
         // We're done now
         salesAgents[msg.sender].finalised = true;
         // Fire the event
-        saleFinalised(msg.sender, _sender, salesAgents[msg.sender].tokensMinted);
+        SaleFinalised(msg.sender, _sender, salesAgents[msg.sender].tokensMinted);
         // All good
         return true;
     }
