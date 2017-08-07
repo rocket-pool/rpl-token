@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.11;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
 import "../lib/Arithmetic.sol";
@@ -58,7 +58,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth)) throw;
+            assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
             // Fire event
             FinaliseSale(this, msg.sender, targetEth);
         }
@@ -82,7 +82,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
             // Has the contributed total not been reached, but the crowdsale is over?
             if (contributedTotal < targetEth) {
                 // Target wasn't met, refund the user
-                if (!msg.sender.send(userContributionTotal)) throw;
+                assert(msg.sender.send(userContributionTotal) == true);
                 // Fire event
                 Refund(this, msg.sender, userContributionTotal);
             } else {
@@ -93,7 +93,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
                 // Calculate how many tokens the user gets
                 rocketPoolToken.mint(msg.sender, Arithmetic.overflowResistantFraction(percEtherContributed, totalTokens, exponent));
                 // Calculate the refund this user will receive
-                if (!msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent))) throw;
+                assert(msg.sender.send(Arithmetic.overflowResistantFraction(percEtherContributed, (contributedTotal - targetEth), exponent)) == true);
                 // Fire event
                 ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
 

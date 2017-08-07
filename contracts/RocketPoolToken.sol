@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.11;
 import "./base/Owned.sol";
 import "./base/StandardToken.sol";
 import "./interface/SalesAgentInterface.sol";
@@ -31,8 +31,8 @@ contract RocketPoolToken is StandardToken, Owned {
     string public symbol = 'RPL';
     string public version = "1.0";
     // Set our token units
-    uint256 public constant decimals = 18;
-    uint256 public exponent = 10**decimals;
+    uint8 public constant decimals = 18;
+    uint256 public exponent = 10**uint256(decimals);
     uint256 public totalSupply = 0;                             // The total of tokens currently minted by sales agent contracts    
     uint256 public totalSupplyCap = 50 * (10**6) * exponent;    // 50 Million tokens                                 
     
@@ -191,35 +191,31 @@ contract RocketPoolToken is StandardToken, Owned {
     // Only the owner can register a new sale agent
     public onlyOwner  
     {
-        if(_saleAddress != 0x0 && _depositAddress != 0x0) {    
-
-             // Must have some available tokens
-            assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
-            // Make sure the min deposit is less than or equal to the max
-            assert(_minDeposit <= _maxDeposit);
-
-            // Add the new sales contract
-            salesAgents[_saleAddress] = salesAgent({
-                saleContractAddress: _saleAddress,       
-                saleContractType: sha3(_saleContractType), 
-                targetEthMin: _targetEthMin,           
-                targetEthMax: _targetEthMax,
-                tokensLimit: _tokensLimit,  
-                tokensMinted: 0,
-                minDeposit: _minDeposit,
-                maxDeposit: _maxDeposit,            
-                startBlock: _startBlock,                 
-                endBlock: _endBlock,              
-                depositAddress: _depositAddress, 
-                depositAddressCheckedIn: false,  
-                finalised: false,     
-                exists: true                      
-            });
-            // Store our agent address so we can iterate over it if needed
-            salesAgentsAddresses.push(_saleAddress);
-        }else{
-            throw;
-        }
+        // Valid addresses?
+        assert(_saleAddress != 0x0 && _depositAddress != 0x0);  
+        // Must have some available tokens
+        assert(_tokensLimit > 0 && _tokensLimit <= totalSupplyCap);
+        // Make sure the min deposit is less than or equal to the max
+        assert(_minDeposit <= _maxDeposit);
+        // Add the new sales contract
+        salesAgents[_saleAddress] = salesAgent({
+            saleContractAddress: _saleAddress,       
+            saleContractType: sha3(_saleContractType), 
+            targetEthMin: _targetEthMin,           
+            targetEthMax: _targetEthMax,
+            tokensLimit: _tokensLimit,  
+            tokensMinted: 0,
+            minDeposit: _minDeposit,
+            maxDeposit: _maxDeposit,            
+            startBlock: _startBlock,                 
+            endBlock: _endBlock,              
+            depositAddress: _depositAddress, 
+            depositAddressCheckedIn: false,  
+            finalised: false,     
+            exists: true                      
+        });
+        // Store our agent address so we can iterate over it if needed
+        salesAgentsAddresses.push(_saleAddress);
     }
 
 

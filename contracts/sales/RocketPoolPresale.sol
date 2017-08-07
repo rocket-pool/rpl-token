@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.11;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
 import "../base/Owned.sol";
@@ -102,15 +102,13 @@ contract RocketPoolPresale is SalesAgent, Owned  {
             totalReservedEther = SafeMath.add(totalReservedEther, _amount);
         } 
     }
+    
 
     /// @dev Get a presale users ether allocation
     function getPresaleAllocation(address _address) public constant onlyPresaleUser(_address) returns(uint256) {
         // Get the users assigned amount
         return allocations[_address].amount;
     }
-
-
-    
 
 
     /// @dev Mint the tokens now for that user instantly
@@ -127,7 +125,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
             contributions[msg.sender] -= refundAmount;
             contributedTotal -= refundAmount;
             // Send the refund, throw if it doesn't succeed
-            if(!msg.sender.send(refundAmount)) throw;
+            assert(msg.sender.send(refundAmount) == true);
             // Fire event
             Refund(this, msg.sender, refundAmount); 
         } 
@@ -151,7 +149,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
-            if (!rocketPoolToken.getSaleContractDepositAddress(this).send(this.balance)) throw;
+            assert(rocketPoolToken.getSaleContractDepositAddress(this).send(this.balance) == true);
             // Fire event
             FinaliseSale(this, msg.sender, this.balance);
         }
