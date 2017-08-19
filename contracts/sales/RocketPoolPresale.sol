@@ -18,7 +18,7 @@ import "../lib/SafeMath.sol";
 *   is passed.
 /****************************************************************/
 
-contract RocketPoolPresale is SalesAgent, Owned  {
+contract RocketPoolPresale is SalesAgent, Owned {
 
     /**** Libs *****************/
     
@@ -65,7 +65,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
-        if(rocketPoolToken.validateContribution(msg.value)) {
+        if (rocketPoolToken.validateContribution(msg.value)) {
             // Have they already collected their reserved amount?
             assert(contributions[msg.sender] == 0);
             // Have they deposited enough to cover their reserved amount?
@@ -88,9 +88,9 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do we have a valid amount and aren't exceeding the total ether allowed for this sale agent and the sale hasn't ended?
-        if(_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= _amount.add(totalReservedEther) && !rocketPoolToken.getSaleContractIsFinalised(this)) {
+        if (_amount > 0 && rocketPoolToken.getSaleContractTargetEtherMax(this) >= _amount.add(totalReservedEther) && !rocketPoolToken.getSaleContractIsFinalised(this)) {
             // Does the user exist already?
-            if(allocations[_address].exists == false) {
+            if (allocations[_address].exists == false) {
                 // Add the user and their allocation amount in Wei
                 allocations[_address] = Allocations({
                     amount: _amount,
@@ -149,7 +149,7 @@ contract RocketPoolPresale is SalesAgent, Owned  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
-        if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
+        if (rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
             assert(rocketPoolToken.getSaleContractDepositAddress(this).send(this.balance) == true);
             // Fire event

@@ -513,7 +513,7 @@ contract('rocketPoolPresale', function (accounts) {
                             // Total minted by sale agent
                             var totalMintedSaleAgent = Number(parseFloat(web3.fromWei(result.valueOf(), 'ether')).toFixed(12));   
                             // Get the total tokens minted according to the main contract
-                            return rocketPoolTokenInstance.totalSupply.call(userFirst).then(function (result) {
+                            return rocketPoolTokenInstance.totalSupply.call().then(function (result) {
                                 // Total Supply
                                 var totalSupply = Number(parseFloat(web3.fromWei(result.valueOf(), 'ether')).toFixed(12));   
                                 //console.log(totalUserTokens);

@@ -21,7 +21,7 @@ import "../lib/SafeMath.sol";
  // credit for original distribution idea goes to hiddentao - https://github.com/hiddentao/ethereum-token-sales
 
 
-contract RocketPoolCrowdsale is SalesAgent  {
+contract RocketPoolCrowdsale is SalesAgent {
 
     /**** Libs *****************/
     
@@ -42,7 +42,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Do some common contribution validation, will throw if an error occurs
-        if(rocketPoolToken.validateContribution(msg.value)) {
+        if (rocketPoolToken.validateContribution(msg.value)) {
             // Add to contributions, automatically checks for overflow with safeMath
             contributions[msg.sender] = contributions[msg.sender].add(msg.value);
             contributedTotal = contributedTotal.add(msg.value);
@@ -59,7 +59,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         // Set the target ether amount locally
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
-        if(rocketPoolToken.setSaleContractFinalised(msg.sender)) {
+        if (rocketPoolToken.setSaleContractFinalised(msg.sender)) {
             // Send to deposit address - revert all state changes if it doesn't make it
             assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
             // Fire event
@@ -75,7 +75,7 @@ contract RocketPoolCrowdsale is SalesAgent  {
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
         // Checks to see if this user has actually contributed anything and if the sale end block has passed
-        if(rocketPoolToken.validateClaimTokens(msg.sender)) {
+        if (rocketPoolToken.validateClaimTokens(msg.sender)) {
             // The users contribution
             uint256 userContributionTotal = contributions[msg.sender];
             // Deduct the contribution now to protect against recursive calls

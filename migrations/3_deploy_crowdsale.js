@@ -1,3 +1,6 @@
+// Config
+var config = require("../truffle.js");
+
 // Contracts
 var rocketPoolToken = artifacts.require("./RocketPoolToken.sol");
 var rocketPoolCrowdsale = artifacts.require("./sales/RocketPoolCrowdsale.sol");
@@ -5,18 +8,12 @@ var rocketPoolCrowdsale = artifacts.require("./sales/RocketPoolCrowdsale.sol");
 // Libs
 var safeMathLib = artifacts.require("./lib/SafeMath.sol");
 
-// Get our network config - can exist in diff locations if doing unit tests vs deploying
-var options = !artifacts.resolver.options ? artifacts.resolver.resolver.options : artifacts.resolver.options;
-var tokenSettings = options.network_config.token;
-var salesContractsSettings = options.network_config.salesContracts;
-var network = options.network;
-
-// If we are on local, the depositAddress is the coinbase
-var crowdsaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.crowdsale.depositAddress;
-
-
 // Deploy now
 module.exports = function(deployer, network) {
+        // Settings
+        var salesContractsSettings = config.networks[network].salesContracts;
+        // If we are on local, the depositAddress is the coinbase
+        var crowdsaleDepositAddress = network == 'development' ? web3.eth.coinbase : salesContractsSettings.crowdsale.depositAddress;
         // Link libs
         deployer.link(safeMathLib, [rocketPoolCrowdsale]);
             // Deploy crowdsales contract next
