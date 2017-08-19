@@ -30,8 +30,8 @@ contract RocketPoolToken is StandardToken, Owned {
     string public symbol = "RPL";
     string public version = "1.0";
     // Set our token units
-    uint8 public constant DECIMALS = 18;
-    uint256 public exponent = 10**uint256(DECIMALS);
+    uint8 public constant decimals = 18;
+    uint256 public exponent = 10**uint256(decimals);
     uint256 public totalSupply = 0;                             // The total of tokens currently minted by sales agent contracts    
     uint256 public totalSupplyCap = 36 * (10**6) * exponent;    // 36 Million tokens
 
