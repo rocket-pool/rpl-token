@@ -27,6 +27,10 @@ contract RocketPoolCrowdsale is SalesAgent {
     
     using SafeMath for uint;
 
+    /**** Properties ***********/
+
+    bool targetEthSent = false; 
+
     // Constructor
     /// @dev Sale Agent Init
     /// @param _tokenContractAddress The main token contract address
@@ -41,6 +45,8 @@ contract RocketPoolCrowdsale is SalesAgent {
     function() payable external { 
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        // The target ether amount
+        uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
         if (rocketPoolToken.validateContribution(msg.value)) {
             // Add to contributions, automatically checks for overflow with safeMath
@@ -48,6 +54,15 @@ contract RocketPoolCrowdsale is SalesAgent {
             contributedTotal = contributedTotal.add(msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
+            // Have we met the min required ether for this sale to be a success? Send to the deposit address now
+            if (contributedTotal >= targetEth && targetEthSent == false) {
+                // Send to deposit address - revert all state changes if it doesn't make it
+                assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
+                // Fire the event     
+                TransferToDepositAddress(this, msg.sender, targetEth);
+                // Mark as true now
+                targetEthSent = true;
+            }
         }
     }
 
@@ -56,14 +71,10 @@ contract RocketPoolCrowdsale is SalesAgent {
     function finaliseFunding() external {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Set the target ether amount locally
-        uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
         if (rocketPoolToken.setSaleContractFinalised(msg.sender)) {
-            // Send to deposit address - revert all state changes if it doesn't make it
-            assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
             // Fire event
-            FinaliseSale(this, msg.sender, targetEth);
+            FinaliseSale(this, msg.sender, 0);
         }
     }
 

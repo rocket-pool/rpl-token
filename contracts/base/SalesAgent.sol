@@ -27,6 +27,7 @@ contract SalesAgent {
     event FinaliseSale(address _agent, address _sender, uint256 _value);
     event Refund(address _agent, address _sender, uint256 _value);
     event ClaimTokens(address _agent, address _sender, uint256 _value); 
+    event TransferToDepositAddress(address _agent, address _sender, uint256 _value);
 
     /*** Tests *****************/
 

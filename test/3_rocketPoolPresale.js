@@ -338,7 +338,7 @@ contract('rocketPoolPresale', function (accounts) {
     }); // End Test    
 
 
-    it(printTitle('userFirst', 'deposits more ether than he\'s allocated, receives all his tokens and a refund'), function () {
+    it(printTitle('userFirst', 'deposits more ether than he\'s allocated, receives all his tokens and a refund, depositAddress receives funds instantly'), function () {
         // Token contract   
         return rocketPoolToken.deployed().then(function (rocketPoolTokenInstance) {
             // presale contract   
@@ -347,6 +347,8 @@ contract('rocketPoolPresale', function (accounts) {
                 var sendAmount = web3.toWei('5', 'ether');
                 var userBalance = web3.eth.getBalance(userFirst).valueOf();
                 var contractBalance = web3.eth.getBalance(rocketPoolPresaleInstance.address).valueOf();
+                // Deposit Address balance
+                var depositAddressBalance = web3.eth.getBalance(saleContracts.presale.depositAddress);
                 // Get the amount that's allocated to the presale user
                 return rocketPoolPresaleInstance.getPresaleAllocation.call(userFirst).then(function (result) {
                     // Get the amount
@@ -367,8 +369,10 @@ contract('rocketPoolPresale', function (accounts) {
                             var userFirstTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
                             // The amount of expected tokens - use toFixed to avoid miniscule rounding errors between js and solidity
                             var expectedTokens = parseFloat(web3.fromWei(presaleEtherAllocation / tokenPriceInEther, 'ether')).toFixed(6);
+                            // Does depositAddress have the funds from userFirst now?
+                            var depositAddressBalanceAfter = web3.eth.getBalance(saleContracts.presale.depositAddress);
                             // Make sure the refund is correct and the user has the correct amount of tokens
-                            return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens ? true : false;
+                            return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens && depositAddressBalanceAfter == (Number(depositAddressBalance) + Number(presaleEtherAllocation)) ? true : false;
                         }).then(function (result) {
                             assert.isTrue(result, "useFirst receives correct amount of tokens and refund.");
                         });
@@ -376,7 +380,8 @@ contract('rocketPoolPresale', function (accounts) {
                 });
             });
         });
-    }); // End Test    
+    }); // End Test   
+    
 
 
     it(printTitle('userFirst', 'fails to deposit again after he\'s used up his ether allocation'), function () {
@@ -568,7 +573,7 @@ contract('rocketPoolPresale', function (accounts) {
                     return rocketPoolTokenInstance.getSaleContractIsFinalised.call(rocketPoolPresaleInstance.address).then(function (result) {
                         var isFinalised = result.valueOf();
                         // Check it all now
-                        return isFinalised == true && saleAgentAccountAfter == 0 && depositAddressAccountAfter > depositAddressAccountBefore;
+                        return isFinalised == true && saleAgentAccountAfter == 0;
                     }).then(function (result) {
                         assert.isTrue(result, "token counts are correct.");
                     });

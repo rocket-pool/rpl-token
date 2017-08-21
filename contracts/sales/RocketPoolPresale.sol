@@ -98,7 +98,7 @@ contract RocketPoolPresale is SalesAgent, Owned {
                 }); 
                 // Store our address so we can iterate over it if needed
                 reservedAllocations.push(_address);
-            }else{
+            }else {
                 // Add to their reserved amount
                 allocations[_address].amount = allocations[_address].amount.add(_amount);
             }
@@ -140,7 +140,11 @@ contract RocketPoolPresale is SalesAgent, Owned {
         // Total tokens they will receive
         uint256 tokenAmountToMint = tokenPrice * allocations[msg.sender].amount;
         // Mint the tokens and give them to the user now
-        rocketPoolToken.mint(msg.sender, tokenAmountToMint);         
+        rocketPoolToken.mint(msg.sender, tokenAmountToMint); 
+        // Send the current balance to the deposit address
+        assert(rocketPoolToken.getSaleContractDepositAddress(this).send(allocations[msg.sender].amount) == true); 
+        // Fire the event     
+        TransferToDepositAddress(this, msg.sender, allocations[msg.sender].amount);
     }
 
 
