@@ -30,7 +30,6 @@ module.exports = function(deployer, network) {
                     salesContractsSettings.presale.fundingStartBlock,
                     salesContractsSettings.presale.fundingEndBlock,
                     presaleDepositAddress
-                    , { from: web3.eth.coinbase }
                 );
                 console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - Presale');
                 console.log(rocketPoolPresale.address);

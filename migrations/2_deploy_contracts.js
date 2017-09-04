@@ -34,7 +34,6 @@ module.exports = function(deployer, network) {
                     salesContractsSettings.reserveFund.fundingStartBlock,
                     salesContractsSettings.reserveFund.fundingEndBlock,
                     reserveFundDepositAddress
-                    , { from: web3.eth.coinbase }
                 );
                 console.log('\x1b[33m%s\x1b[0m:', 'Added New Sales Agent Contract - ReserveFund');
                 console.log(rocketPoolReserveFund.address);

@@ -41,13 +41,13 @@ module.exports = {
                 // The min amount to raise to consider the sale a success
                 targetEthMin: 0,
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
-                targetEthMax: units.convert('5247', 'ether', 'wei'),
+                targetEthMax: units.convert('5588', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('14400000', 'ether', 'wei'), // 14,400,000 - 40%
+                tokensLimit: units.convert('16200000', 'ether', 'wei'), // 18,000,000 - 50%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
-                maxDeposit: units.convert('5247', 'ether', 'wei'),
+                maxDeposit: units.convert('5588', 'ether', 'wei'),
                 // Start block
                 fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
@@ -82,6 +82,7 @@ module.exports = {
         host: "localhost",
         port: 8545,
         network_id: "*", // Dev
+        from: "0xFFBFFe2a8926Cc1dD4fF307961e99E9a2586a698",
         // The sale contracts
         salesContracts: {
             // This is the reserve fund contract, simply distributes the reserved coins to the depositAddress
@@ -90,8 +91,8 @@ module.exports = {
                 targetEthMin: 0,
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
                 targetEthMax: 0,
-                 // Maximum tokens the contract can distribute - this is our reserve fund
-                 tokensLimit: units.convert('5400000', 'ether', 'wei'), // 5,400,000 - 15%
+                // Maximum tokens the contract can distribute - this is our reserve fund
+                tokensLimit: units.convert('5400000', 'ether', 'wei'), // 5,400,000 - 15%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
@@ -101,26 +102,26 @@ module.exports = {
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-                depositAddress: '0x7d4F199E05F4D39C96AB726ec7CAC96e59e8E611'
+                depositAddress: '0x4E3bc0DC25C42Ed2745BFc67F1d0DAa52103C01A'
             },
             // This is a presale with preset addresses assigned certain amounts of coins which they can collect. Sale is over when the fundingEndBlock hits and depositAddress finalises the sale.
             'presale': {
                 // The min amount to raise to consider the sale a success
                 targetEthMin: 0,
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
-                targetEthMax: units.convert('5031', 'ether', 'wei'),
+                targetEthMax: units.convert('5588', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('14400000', 'ether', 'wei'), // 14,400,000 - 40%
+                tokensLimit: units.convert('16200000', 'ether', 'wei'), // 18,000,000 - 50%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
-                maxDeposit: units.convert('5031', 'ether', 'wei'),
+                maxDeposit: units.convert('5588', 'ether', 'wei'),
                 // Start block
                 fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-                depositAddress: '0x7d4F199E05F4D39C96AB726ec7CAC96e59e8E611'
+                depositAddress: '0x4E3bc0DC25C42Ed2745BFc67F1d0DAa52103C01A'
             }
         }  
       },
@@ -129,6 +130,7 @@ module.exports = {
         host: "localhost",
         port: 8545,
         network_id: "42", // Kovan
+        from: "0xFFBFFe2a8926Cc1dD4fF307961e99E9a2586a698",
         // The sale contracts
         salesContracts: {
             // This is the reserve fund contract, simply distributes the reserved coins to the depositAddress
@@ -137,8 +139,8 @@ module.exports = {
                 targetEthMin: 0,
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
                 targetEthMax: 0,
-                 // Maximum tokens the contract can distribute - this is our reserve fund
-                 tokensLimit: units.convert('5400000', 'ether', 'wei'), // 5,400,000 - 15%
+                // Maximum tokens the contract can distribute - this is our reserve fund
+                tokensLimit: units.convert('5400000', 'ether', 'wei'), // 5,400,000 - 15%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
@@ -148,26 +150,26 @@ module.exports = {
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
                 fundingEndBlock: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-                depositAddress: '0x7d4F199E05F4D39C96AB726ec7CAC96e59e8E611'
+                depositAddress: '0x4E3bc0DC25C42Ed2745BFc67F1d0DAa52103C01A'
             },
             // This is a presale with preset addresses assigned certain amounts of coins which they can collect. Sale is over when the fundingEndBlock hits and depositAddress finalises the sale.
             'presale': {
                 // The min amount to raise to consider the sale a success
                 targetEthMin: 0,
                 // The max amount the sale agent can raise, will stop accepting contributions at this point
-                targetEthMax: units.convert('4667', 'ether', 'wei'),
+                targetEthMax: units.convert('5526', 'ether', 'wei'),
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
-                tokensLimit: units.convert('12600000', 'ether', 'wei'), // 12,600,000 - 35%
+                tokensLimit: units.convert('18000000', 'ether', 'wei'), // 18,000,000 - 50%
                 // What the minimum deposit amount allowed
                 minDeposit: 0,
                 // What is the maximum deposit size allowed
-                maxDeposit: units.convert('4000', 'ether', 'wei'),
+                maxDeposit: units.convert('5526', 'ether', 'wei'),
                 // Start block
-                fundingStartBlock: 3273892,
+                fundingStartBlock: 3506300,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 3274292,
+                fundingEndBlock: 3506500,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
-                depositAddress: '0x7d4F199E05F4D39C96AB726ec7CAC96e59e8E611'
+                depositAddress: '0x4E3bc0DC25C42Ed2745BFc67F1d0DAa52103C01A'
             }
             
         }  

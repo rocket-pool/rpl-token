@@ -119,6 +119,7 @@ contract RocketPoolPresale is SalesAgent, Owned {
     function mintSendTokens() private {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
+        uint256 exponent = rocketPoolToken.exponent();
         // If the user sent too much ether, calculate the refund
         uint256 refundAmount = contributions[msg.sender] > allocations[msg.sender].amount ? contributions[msg.sender].sub(allocations[msg.sender].amount) : 0;    
         // Send the refund, throw if it doesn't succeed
@@ -136,9 +137,9 @@ contract RocketPoolPresale is SalesAgent, Owned {
         // Note: There's a bug in testrpc currently which will deduct the msg.value twice from the user when calling any library function such as below (https://github.com/ethereumjs/testrpc/issues/122)
         //       Testnet and mainnet work as expected
         // Calculate the ether price of each token using the target max Eth and total tokens available for this agent, so tokenPrice = totalTokens / maxTargetEth
-        uint256 tokenPrice = totalTokens.div(rocketPoolToken.getSaleContractTargetEtherMax(this));
-        // Total tokens they will receive
-        uint256 tokenAmountToMint = tokenPrice * allocations[msg.sender].amount;
+        // uint256 tokenPrice = totalTokens.div(rocketPoolToken.getSaleContractTargetEtherMax(this));
+        uint256 tokenPrice = totalTokens.mul(exponent) / rocketPoolToken.getSaleContractTargetEtherMax(this);
+        uint256 tokenAmountToMint = tokenPrice.mul(allocations[msg.sender].amount).div(exponent);
         // Mint the tokens and give them to the user now
         rocketPoolToken.mint(msg.sender, tokenAmountToMint); 
         // Send the current allocation to the deposit address
