@@ -150,6 +150,7 @@ contract('rocketPoolPresale', function (accounts) {
                                                 console.log(printTitle(' Max Deposit', web3.fromWei(saleContracts.presale.maxDeposit, 'ether')));
                                                 console.log(printTitle(' Deposit Address', saleContracts.presale.depositAddress));
                                                 console.log(printTitle(' Token Price in Ether', tokenPriceInEther));
+                                                console.log(printTitle(' Tokens Per Ether', Number(1 / tokenPriceInEther).toFixed(0)));
                                                 console.log("\n");
                                                 return saleContracts.presale.depositAddress != 0 ? true : false;
                                             }).then(function (result) {
@@ -366,9 +367,9 @@ contract('rocketPoolPresale', function (accounts) {
                         // Get the token balance of their account now after withdrawing
                         return rocketPoolTokenInstance.balanceOf.call(userFirst).then(function (result) {
                             // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
-                            var userFirstTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
+                            var userFirstTokens = parseFloat(web3.fromWei(result.valueOf())).toFixed(0);
                             // The amount of expected tokens - use toFixed to avoid miniscule rounding errors between js and solidity
-                            var expectedTokens = parseFloat(web3.fromWei(presaleEtherAllocation / tokenPriceInEther, 'ether')).toFixed(6);
+                            var expectedTokens = parseFloat(web3.fromWei(presaleEtherAllocation / tokenPriceInEther, 'ether')).toFixed(0);
                             // Does depositAddress have the funds from userFirst now?
                             var depositAddressBalanceAfter = web3.eth.getBalance(saleContracts.presale.depositAddress);
                             // Make sure the refund is correct and the user has the correct amount of tokens
@@ -382,7 +383,6 @@ contract('rocketPoolPresale', function (accounts) {
         });
     }); // End Test   
     
-
 
     it(printTitle('userFirst', 'fails to deposit again after he\'s used up his ether allocation'), function () {
         // Token contract   
@@ -459,9 +459,9 @@ contract('rocketPoolPresale', function (accounts) {
                         // Get the token balance of their account now after withdrawing
                         return rocketPoolTokenInstance.balanceOf.call(userSecond).then(function (result) {
                             // The users minted tokens - use toFixed to avoid miniscule rounding errors between js and solidity
-                            var userSecondTokensTotal = parseFloat(web3.fromWei(result.valueOf())).toFixed(6);
+                            var userSecondTokensTotal = parseFloat(web3.fromWei(result.valueOf())).toFixed(0);
                             // The amount of expected tokens - use toFixed to avoid differences in minute rounding errors between js and solidity
-                            var expectedTokens = parseFloat(web3.fromWei(sendAmount / tokenPriceInEther, 'ether')).toFixed(6);
+                            var expectedTokens = parseFloat(web3.fromWei(sendAmount / tokenPriceInEther, 'ether')).toFixed(0);
                             // Make sure the refund is correct and the user has the correct amount of tokens
                             return refund == 0 && userSecondTokensTotal == expectedTokens ? true : false;
                         }).then(function (result) {
