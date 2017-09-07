@@ -373,6 +373,7 @@ contract('rocketPoolPresale', function (accounts) {
                             // Does depositAddress have the funds from userFirst now?
                             var depositAddressBalanceAfter = web3.eth.getBalance(saleContracts.presale.depositAddress);
                             // Make sure the refund is correct and the user has the correct amount of tokens
+                            //console.log(userFirstTokens, expectedTokens);
                             return refund == (sendAmount - presaleEtherAllocation) && userFirstTokens == expectedTokens && depositAddressBalanceAfter == (Number(depositAddressBalance) + Number(presaleEtherAllocation)) ? true : false;
                         }).then(function (result) {
                             assert.isTrue(result, "useFirst receives correct amount of tokens and refund.");
