@@ -1,7 +1,9 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.15;
 import "../RocketPoolToken.sol";
 import "../base/SalesAgent.sol";
+import "../base/Owned.sol";
 import "../lib/SafeMath.sol";
+
 
 
 /// @title The main Rocket Pool Token (RPL) crowdsale contract
@@ -21,7 +23,7 @@ import "../lib/SafeMath.sol";
  // credit for original distribution idea goes to hiddentao - https://github.com/hiddentao/ethereum-token-sales
 
 
-contract RocketPoolCrowdsale is SalesAgent {
+contract RocketPoolCrowdsale is SalesAgent, Owned {
 
     /**** Libs *****************/
     
@@ -30,6 +32,9 @@ contract RocketPoolCrowdsale is SalesAgent {
     /**** Properties ***********/
 
     bool targetEthSent = false; 
+    uint256 deployedTime;
+
+    event FlagUint(uint256 flag);
 
     // Constructor
     /// @dev Sale Agent Init
@@ -37,6 +42,8 @@ contract RocketPoolCrowdsale is SalesAgent {
     function RocketPoolCrowdsale(address _tokenContractAddress) {
         // Set the main token address
         tokenContractAddress = _tokenContractAddress;
+        // Set the time the contract was deployed
+        deployedTime = now;
     }
 
 
@@ -54,6 +61,7 @@ contract RocketPoolCrowdsale is SalesAgent {
             contributedTotal = contributedTotal.add(msg.value);
             // Fire event
             Contribute(this, msg.sender, msg.value); 
+            FlagUint(contributedTotal);
             // Have we met the min required ether for this sale to be a success? Send to the deposit address now
             if (contributedTotal >= targetEth && targetEthSent == false) {
                 // Send to deposit address - revert all state changes if it doesn't make it
@@ -67,7 +75,7 @@ contract RocketPoolCrowdsale is SalesAgent {
     }
 
 
-    /// @dev Finalises the funding and sends the ETH to deposit address
+    /// @dev Finalises the funding
     function finaliseFunding() external {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
@@ -78,36 +86,59 @@ contract RocketPoolCrowdsale is SalesAgent {
         }
     }
 
-    /// @dev Allows contributors to claim their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
+    /// @dev Allows contributors to claim their tokens and/or a refund via a public facing method
     function claimTokensAndRefund() external {
+        // Get the tokens and refund now
+        sendTokensAndRefund(msg.sender);
+    }
+
+    /// @dev onlyOwner - Sends a users tokens to the user after the sale has finished, included incase some users cant figure out running the claimTokensAndRefund() method themselves
+    /// @param _contributerAddress Address of the crowdsale user
+    function ownerClaimTokensAndRefundForUser(address _contributerAddress) external onlyOwner {
+        // The owner of the contract can trigger a users tokens to be sent to them if they can't do it themselves
+       sendTokensAndRefund(_contributerAddress);
+    }
+
+
+    /// @dev Sends the contributors their tokens and/or a refund. If funding failed then they get back all their Ether, otherwise they get back any excess Ether
+    function sendTokensAndRefund(address _contributerAddress) private {
         // Get the token contract
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Set the target ether amount locally
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
         // Do some common contribution validation, will throw if an error occurs
         // Checks to see if this user has actually contributed anything and if the sale end block has passed
-        if (rocketPoolToken.validateClaimTokens(msg.sender)) {
+        if (rocketPoolToken.validateClaimTokens(_contributerAddress)) {
             // The users contribution
-            uint256 userContributionTotal = contributions[msg.sender];
+            uint256 userContributionTotal = contributions[_contributerAddress];
             // Deduct the contribution now to protect against recursive calls
-            contributions[msg.sender] = 0; 
+            contributions[_contributerAddress] = 0; 
             // Has the contributed total not been reached, but the crowdsale is over?
             if (contributedTotal < targetEth) {
                 // Target wasn't met, refund the user
-                assert(msg.sender.send(userContributionTotal) == true);
+                assert(_contributerAddress.send(userContributionTotal) == true);
                 // Fire event
-                Refund(this, msg.sender, userContributionTotal);
+                Refund(this, _contributerAddress, userContributionTotal);
             } else {
                 // Max tokens alloted to this sale agent contract
                 uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
                 // Calculate how many tokens the user gets
-                rocketPoolToken.mint(msg.sender, totalTokens.mul(userContributionTotal) / contributedTotal);
+                rocketPoolToken.mint(_contributerAddress, totalTokens.mul(userContributionTotal) / contributedTotal);
                 // Calculate the refund this user will receive
-                assert(msg.sender.send((contributedTotal - targetEth).mul(userContributionTotal) / contributedTotal) == true);
+                assert(_contributerAddress.send((contributedTotal - targetEth).mul(userContributionTotal) / contributedTotal) == true);
                 // Fire event
-                ClaimTokens(this, msg.sender, rocketPoolToken.balanceOf(msg.sender));
+                ClaimTokens(this, _contributerAddress, rocketPoolToken.balanceOf(_contributerAddress));
             }
         }
+    }
+
+
+    /// @dev onlyOwner - Can kill the contract and claim any ether left in it, can only do this 6 months after it has been deployed, good as a backup
+    function kill() external onlyOwner {
+        // Get the token contract
+        assert (now >= (deployedTime + 24 weeks));
+        // Now self destruct and send any dust/ether left over
+        selfdestruct(msg.sender);
     }
 
 
