@@ -31,10 +31,12 @@ contract RocketPoolCrowdsale is SalesAgent, Owned {
 
     /**** Properties ***********/
 
-    bool targetEthSent = false; 
-    uint256 deployedTime;
+    bool public targetEthSent = false;
+    bool public saleDepositsAllowed = false; 
+    uint256 public deployedTime;
 
-    event FlagUint(uint256 flag);
+
+    /**** Methods ************ */
 
     // Constructor
     /// @dev Sale Agent Init
@@ -54,35 +56,24 @@ contract RocketPoolCrowdsale is SalesAgent, Owned {
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // The target ether amount
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
+        // Only allow sales if set to true
+        assert(saleDepositsAllowed == true);
         // Do some common contribution validation, will throw if an error occurs
-        if (rocketPoolToken.validateContribution(msg.value)) {
-            // Add to contributions, automatically checks for overflow with safeMath
-            contributions[msg.sender] = contributions[msg.sender].add(msg.value);
-            contributedTotal = contributedTotal.add(msg.value);
-            // Fire event
-            Contribute(this, msg.sender, msg.value); 
-            FlagUint(contributedTotal);
-            // Have we met the min required ether for this sale to be a success? Send to the deposit address now
-            if (contributedTotal >= targetEth && targetEthSent == false) {
-                // Send to deposit address - revert all state changes if it doesn't make it
-                assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
-                // Fire the event     
-                TransferToDepositAddress(this, msg.sender, targetEth);
-                // Mark as true now
-                targetEthSent = true;
-            }
-        }
-    }
-
-
-    /// @dev Finalises the funding
-    function finaliseFunding() external {
-        // Get the token contract
-        RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
-        // Do some common contribution validation, will throw if an error occurs - address calling this should match the deposit address
-        if (rocketPoolToken.setSaleContractFinalised(msg.sender)) {
-            // Fire event
-            FinaliseSale(this, msg.sender, 0);
+        assert(rocketPoolToken.validateContribution(msg.value));
+        // Add to contributions, automatically checks for overflow with safeMath
+        contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+        contributedTotal = contributedTotal.add(msg.value);
+        // Fire event
+        Contribute(this, msg.sender, msg.value); 
+        FlagUint(contributedTotal);
+        // Have we met the min required ether for this sale to be a success? Send to the deposit address now
+        if (contributedTotal >= targetEth && targetEthSent == false) {
+            // Send to deposit address - revert all state changes if it doesn't make it
+            assert(rocketPoolToken.getSaleContractDepositAddress(this).send(targetEth) == true);
+            // Fire the event     
+            TransferToDepositAddress(this, msg.sender, targetEth);
+            // Mark as true now
+            targetEthSent = true;
         }
     }
 
@@ -106,36 +97,44 @@ contract RocketPoolCrowdsale is SalesAgent, Owned {
         RocketPoolToken rocketPoolToken = RocketPoolToken(tokenContractAddress);
         // Set the target ether amount locally
         uint256 targetEth = rocketPoolToken.getSaleContractTargetEtherMin(this);
-        // Do some common contribution validation, will throw if an error occurs
-        // Checks to see if this user has actually contributed anything and if the sale end block has passed
-        if (rocketPoolToken.validateClaimTokens(_contributerAddress)) {
-            // The users contribution
-            uint256 userContributionTotal = contributions[_contributerAddress];
-            // Deduct the contribution now to protect against recursive calls
-            contributions[_contributerAddress] = 0; 
-            // Has the contributed total not been reached, but the crowdsale is over?
-            if (contributedTotal < targetEth) {
-                // Target wasn't met, refund the user
-                assert(_contributerAddress.send(userContributionTotal) == true);
-                // Fire event
-                Refund(this, _contributerAddress, userContributionTotal);
-            } else {
-                // Max tokens alloted to this sale agent contract
-                uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
-                // Calculate how many tokens the user gets
-                rocketPoolToken.mint(_contributerAddress, totalTokens.mul(userContributionTotal) / contributedTotal);
-                // Calculate the refund this user will receive
-                assert(_contributerAddress.send((contributedTotal - targetEth).mul(userContributionTotal) / contributedTotal) == true);
-                // Fire event
-                ClaimTokens(this, _contributerAddress, rocketPoolToken.balanceOf(_contributerAddress));
-            }
+        // Must have previously contributed
+        assert(contributions[_contributerAddress] > 0); 
+        // Deposits must no longer be allowed
+        assert(saleDepositsAllowed == false); 
+        // The users contribution
+        uint256 userContributionTotal = contributions[_contributerAddress];
+        // Deduct the contribution now to protect against recursive calls
+        contributions[_contributerAddress] = 0; 
+        // Has the contributed total not been reached, but the crowdsale is over?
+        if (contributedTotal < targetEth) {
+            // Target wasn't met, refund the user
+            assert(_contributerAddress.send(userContributionTotal) == true);
+            // Fire event
+            Refund(this, _contributerAddress, userContributionTotal);
+        } else {
+            // Max tokens alloted to this sale agent contract
+            uint256 totalTokens = rocketPoolToken.getSaleContractTokensLimit(this);
+            uint256 totalRefund = (contributedTotal - targetEth).mul(userContributionTotal) / contributedTotal;
+            // Calculate how many tokens the user gets
+            rocketPoolToken.mint(_contributerAddress, totalTokens.mul(userContributionTotal) / contributedTotal);
+            // Calculate the refund this user will receive
+            assert(_contributerAddress.send(totalRefund) == true);
+            // Fire events
+            ClaimTokens(this, _contributerAddress, rocketPoolToken.balanceOf(_contributerAddress));
+            Refund(this, _contributerAddress, totalRefund);
         }
     }
 
 
+    /// @dev onlyOwner - When the sale is finished the owner can flag this and allow tokens + refunds to be collected
+    function setSaleDepositsAllowed(bool _set) external onlyOwner {
+        saleDepositsAllowed = _set;
+    }
+
+  
     /// @dev onlyOwner - Can kill the contract and claim any ether left in it, can only do this 6 months after it has been deployed, good as a backup
     function kill() external onlyOwner {
-        // Get the token contract
+        // Only allow access after 6 months
         assert (now >= (deployedTime + 24 weeks));
         // Now self destruct and send any dust/ether left over
         selfdestruct(msg.sender);

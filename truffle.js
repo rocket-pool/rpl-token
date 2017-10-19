@@ -65,13 +65,13 @@ module.exports = {
                 // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
                 tokensLimit: units.convert('7088000', 'ether', 'wei'), // 7,088,000 - ~40%
                 // What the minimum deposit amount allowed
-                minDeposit: 0,
+                minDeposit: units.convert('0.1', 'ether', 'wei'),
                 // What is the maximum deposit size allowed
                 maxDeposit: units.convert('2', 'ether', 'wei'), // 1000
                 // Start block
-                fundingStartBlock: 15,
+                fundingStartBlock: 0,
                 // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
-                fundingEndBlock: 26,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
+                fundingEndBlock: 0,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: 'testrpccoinbase'
             }
@@ -82,7 +82,7 @@ module.exports = {
         host: "localhost",
         port: 8545,
         network_id: "*", // Dev
-        from: "0xFFBFFe2a8926Cc1dD4fF307961e99E9a2586a698",
+        from: "0x00a329c0648769A73afAc7F9381E08FB43dBEA72",
         // The sale contracts
         salesContracts: {
             // This is the reserve fund contract, simply distributes the reserved coins to the depositAddress
@@ -122,6 +122,26 @@ module.exports = {
                 fundingEndBlock: 0,
                 // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
                 depositAddress: '0x4E3bc0DC25C42Ed2745BFc67F1d0DAa52103C01A'
+            },
+            // This is a proportionally distributed crowdsale, when the targetEthMin is met, the sale is considered a success and users can collect their tokens + refund.
+            // Estimate 18sec blocks including uncles, brings us too 4,800 blocks per day
+            'crowdsale': {
+                // The min amount to raise to consider the sale a success
+                targetEthMin: units.convert('5', 'ether', 'wei'), // 5,846
+                // The max amount the sale agent can raise, will stop accepting contributions at this point
+                targetEthMax: units.convert('30000', 'ether', 'wei'), // 30,000
+                // Maximum tokens the contract can distribute, setting to 0 will assign it all available tokens 
+                tokensLimit: units.convert('7088000', 'ether', 'wei'), // 7,088,000 - ~40%
+                // What the minimum deposit amount allowed
+                minDeposit: units.convert('0.1', 'ether', 'wei'),
+                // What is the maximum deposit size allowed
+                maxDeposit: units.convert('5', 'ether', 'wei'), // 1000
+                // Start block
+                fundingStartBlock: 400,
+                // End block, If the end block is set to 0, the sale continues until supply runs out or its finalised
+                fundingEndBlock: 420,    // = fundingStartBlock + 144,000 = est 4,800 blocks per day x 30 days
+                // Deposit address that will be allowed to withdraw the crowdsales ether - this is overwritten with the coinbase address for testing here
+                depositAddress: '0x004DA322eD77C969e139e131D6ddfc1eF10296C7'
             }
         }  
       },
