@@ -195,7 +195,7 @@ contract('RocketPoolToken', function (accounts) {
                     'myowncontract',
                     1,
                     100,
-                    web3.toWei('50000001', 'ether'), 
+                    web3.utils.toWei('50000001', 'ether'), 
                     0,
                     100,
                     saleContracts.reserveFund.fundingStartBlock,
