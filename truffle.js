@@ -10,6 +10,11 @@ var units = require('ethereumjs-units');
 
 
 module.exports = {
+compilers: {
+    solc: {
+        version: "0.4.15",  // ex:  "0.4.20". (Default: Truffle's installed solc)
+    }
+},
   networks: {
     development: {
         host: "localhost",
