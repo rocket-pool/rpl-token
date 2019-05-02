@@ -62,7 +62,7 @@ contract('RocketPoolReserveFund', function (accounts) {
     var depositAddress = 0;
 
     // Our contributers    
-    var owner = web3.eth.coinbase;
+    var owner = accounts[0];
     var userFirst = accounts[1];
     var userSecond = accounts[2];
     var userThird = accounts[3];
